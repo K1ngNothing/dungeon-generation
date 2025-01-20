@@ -1,0 +1,190 @@
+#include "AnalyticalSolver.h"
+
+#include <cassert>
+#include <iostream>
+
+namespace DungeonGenerator {
+namespace AnalyticalSolver {
+
+AnalyticalSolver::AnalyticalSolver(
+    size_t roomCnt, std::vector<Functions::FGEval>&& costFunctions,
+    std::vector<Functions::FGEval>&& equalityConstraints)
+      : roomCnt_(roomCnt),
+        varCnt_(roomCnt * 2),
+        cEqCnt_(equalityConstraints.size()),
+        JEqCache_(cEqCnt_, std::vector<double>(varCnt_)),
+        costFunctions_(std::move(costFunctions)),
+        equalityConstraints_(std::move(equalityConstraints))
+{
+    if (PetscInitializeNoArguments() != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver:: failed to initialize PETSc");
+    }
+    if (initializeTAOSolvers() != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver: failed to initialize TAO solvers");
+    }
+    if (initializeTAOContainers() != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver: failed to initialize containers for TAO solvers");
+    }
+    if (setContainersAndRoutines() != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver: failed to set containers and routines to TAO solvers");
+    }
+    if (setScaryOptionsInTAOSolvers() != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver: failed to set scary options for TAO solvers");
+    }
+}
+
+AnalyticalSolver::~AnalyticalSolver()
+{
+    destroyTAOObjects();
+}
+
+void AnalyticalSolver::solve()
+{
+    std::cerr << "AnalyticalSolver: start solving...\n";
+    if (TaoSolve(almmSolver_) != PETSC_SUCCESS) {
+        throw std::runtime_error("AnalyticalSolver: error in TaoSolve for ALMM solver");
+    }
+    TaoConvergedReason convergedReason;
+    if (TaoGetConvergedReason(almmSolver_, &convergedReason) != PETSC_SUCCESS) {
+        // TODO: do better
+        throw std::runtime_error("AnalyticalSolver: failed to retrieve converged reason");
+    }
+    std::cerr << "AnalyticalSolver: finished solving!\n"
+              << "Converged reason: " << TaoConvergedReasons[convergedReason] << "\n";
+}
+
+Solution AnalyticalSolver::retrieveSolution() const
+{
+    const double* xArr = nullptr;
+    if (VecGetArrayRead(x_, &xArr) != PETSC_SUCCESS) {
+        return {};
+    }
+    Solution solution(varCnt_);
+    for (size_t i = 0; i < varCnt_; ++i) {
+        solution[i].x = xArr[i * 2 + 1];
+        solution[i].y = xArr[i * 2 + 2];
+    }
+    static_cast<void>(VecRestoreArrayRead(x_, &xArr));
+    return solution;
+}
+
+PetscErrorCode AnalyticalSolver::initializeTAOSolvers()
+{
+    PetscFunctionBegin;
+
+    PetscCall(TaoCreate(MPI_COMM_SELF, &almmSolver_));
+    PetscCall(TaoSetType(almmSolver_, TAOALMM));
+    PetscCall(TaoALMMGetSubsolver(almmSolver_, &almmSubsolver_));
+
+    constexpr size_t almmMaxIterCount = 25;
+    const size_t subsolverMaxIterCount = 10 * varCnt_;
+    const size_t subsolverMaxFcn = 10 * subsolverMaxIterCount;
+
+    PetscCall(TaoALMMSetType(almmSolver_, TAO_ALMM_PHR));
+    PetscCall(TaoSetType(almmSubsolver_, TAOBQNLS));
+    PetscCall(TaoSetMaximumIterations(almmSolver_, almmMaxIterCount));
+    PetscCall(TaoSetMaximumIterations(almmSubsolver_, subsolverMaxIterCount));
+    PetscCall(TaoSetMaximumFunctionEvaluations(almmSubsolver_, subsolverMaxFcn));
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+PetscErrorCode AnalyticalSolver::initializeTAOContainers()
+{
+    PetscFunctionBegin;
+
+    PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &x_));
+    PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &xLowerBound_));
+    PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &xUpperBound_));
+    PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &costGradient_));
+    PetscCall(VecCreateSeq(PETSC_COMM_SELF, cEqCnt_, &cEq_));
+    // TODO: why dense? This matrix for the most part will be very sparse d.t. BFGS rank 2 update.
+    PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, cEqCnt_, varCnt_, nullptr, &JEq_));
+
+    // Set initial solution so no rooms are overlapping exactly
+    double* xArr;
+    PetscCall(VecGetArray(x_, &xArr));
+    for (size_t i = 0; i < roomCnt_; ++i) {
+        xArr[i * 2] = xArr[i * 2 + 1] = i;
+    }
+    PetscCall(VecRestoreArray(x_, &xArr));
+
+    // Tell TAO that there's no variable bounds
+    PetscCall(VecSet(xLowerBound_, PETSC_NINFINITY));
+    PetscCall(VecSet(xUpperBound_, PETSC_INFINITY));
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+PetscErrorCode AnalyticalSolver::setContainersAndRoutines()
+{
+    PetscFunctionBegin;
+
+    PetscCall(TaoSetSolution(almmSolver_, x_));
+    PetscCall(TaoSetVariableBounds(almmSolver_, xLowerBound_, xUpperBound_));
+
+    PetscCall(TaoSetObjectiveAndGradient(almmSolver_, costGradient_, evaluateCostFunctionGradient, this));
+    PetscCall(TaoSetEqualityConstraintsRoutine(almmSolver_, cEq_, evaluateEqualityConstraintFunction, this));
+    PetscCall(TaoSetJacobianEqualityRoutine(almmSolver_, JEq_, JEq_, evaluateEqualityConstraintJacobian, this));
+    PetscCall(TaoSetConvergenceTest(almmSolver_, almmConvergenceTest, this));
+
+    PetscCall(TaoMonitorSet(almmSolver_, monitorALMM, this, nullptr));
+    if (std::getenv("_DEV_MONITOR_SUBSOLVER") != nullptr) {
+        PetscCall(TaoMonitorSet(almmSubsolver_, monitorSubsolver, this, nullptr));
+    }
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+PetscErrorCode AnalyticalSolver::setScaryOptionsInTAOSolvers()
+{
+    PetscFunctionBegin;
+
+    // Set up ALMM solver.
+    // (!) From now on it's forbidden to call `TaoSet...` for both TAO solvers
+    PetscCall(TaoSetUp(almmSolver_));
+
+    // Set initial multipliers to 0 according to original Powell's paper
+    Vec almmMultipliers;
+    PetscCall(TaoALMMGetMultipliers(almmSolver_, &almmMultipliers));
+    PetscCall(VecSet(almmMultipliers, 0.0));
+    PetscCall(TaoSetRecycleHistory(almmSolver_, PETSC_TRUE));  // Otherwise they will be overwritten in TaoSolve
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
+void AnalyticalSolver::destroyTAOObjects()
+{
+    // Can't do much if some of these methods throw an error.
+    // Plus it's almost impossible to begin with
+    if (almmSolver_) static_cast<void>(TaoDestroy(&almmSolver_));
+    if (x_) static_cast<void>(VecDestroy(&x_));
+    if (xLowerBound_) static_cast<void>(VecDestroy(&xLowerBound_));
+    if (xUpperBound_) static_cast<void>(VecDestroy(&xUpperBound_));
+    if (costGradient_) static_cast<void>(VecDestroy(&costGradient_));
+    if (cEq_) static_cast<void>(VecDestroy(&cEq_));
+    if (JEq_) static_cast<void>(MatDestroy(&JEq_));
+}
+
+AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
+{
+    assert(JEqCache_.size() == cEqCnt_ && JEqCache_[0].size() == varCnt_);
+    for (size_t i = 0; i < cEqCnt_; ++i) {
+        JEqCache_[i].assign(varCnt_, 0);
+    }
+    return JEqCache_;
+}
+
+std::vector<double> AnalyticalSolver::provideJEqCache() const
+{
+    std::vector<double> result(cEqCnt_ * varCnt_);
+    for (size_t i = 0; i < cEqCnt_; ++i) {
+        for (size_t j = 0; j < varCnt_; ++j) {
+            result[i * varCnt_ + j] = JEqCache_[i][j];
+        }
+    }
+    return result;
+}
+
+}  // namespace AnalyticalSolver
+}  // namespace DungeonGenerator
