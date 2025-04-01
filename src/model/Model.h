@@ -4,22 +4,36 @@
 
 #include <AnalyticalSolver.h>
 
-#include "Door.h"
+#include "Corridor.h"
 #include "Room.h"
 
 namespace DungeonGenerator {
 namespace Model {
 
-struct Corridor {
-    Door& door1;
-    Door& door2;
-};
-
 struct Model {
-    Rooms rooms;
-    std::vector<Corridor> corridors;
+public:
+    Model() = default;
+    Model(Rooms&& rooms, Corridors&& corridors);
 
-    void dumpToSVG(const AnalyticalSolver::Solution& roomPositions, const std::filesystem::path& outputPath) const;
+    // Movable
+    Model(Model&& other) = default;
+    Model& operator=(Model&& other) = default;
+
+    // Non-copyable
+    Model(const Model& other) = delete;
+    Model& operator=(const Model& other) = delete;
+
+    const Rooms& getRooms() const;
+    const Corridors& getCorridors() const;
+
+    void setPositions(const Positions& roomPositions);
+
+    // Very rough SVG dumper. It maybe will be removed in favor of SFML.
+    void dumpToSVG(const Positions& roomPositions, const std::filesystem::path& outputPath) const;
+
+private:
+    Rooms rooms_;
+    Corridors corridors_;
 };
 
 }  // namespace Model

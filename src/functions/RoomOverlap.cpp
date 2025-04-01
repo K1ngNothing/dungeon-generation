@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <iostream>
 
 namespace DungeonGenerator {
 namespace Functions {
@@ -53,12 +52,15 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
 
     f += fxSquared * fySquared;
     assert(fxSquared * fySquared <= 1 && "Room overlap should be in range [0, 1]");
-    const double gradX1 = 4 * fySquared * fx * dx / (sumHalfWidth * sumHalfWidth);
-    const double gradY1 = 4 * fxSquared * fy * dy / (sumHalfHeight * sumHalfHeight);
-    grad[x1Id] += gradX1;
-    grad[y1Id] += gradY1;
-    grad[x2Id] -= gradX1;
-    grad[y2Id] -= gradY1;
+
+    if (grad != nullptr) {
+        const double gradX1 = 4 * fySquared * fx * dx / (sumHalfWidth * sumHalfWidth);
+        const double gradY1 = 4 * fxSquared * fy * dy / (sumHalfHeight * sumHalfHeight);
+        grad[x1Id] += gradX1;
+        grad[y1Id] += gradY1;
+        grad[x2Id] -= gradX1;
+        grad[y2Id] -= gradY1;
+    }
 
     // DEBUG
     // std::cout << "Overlap between rooms " << room1_.id << ' ' << room2_.id << ": " << fxSquared * fySquared

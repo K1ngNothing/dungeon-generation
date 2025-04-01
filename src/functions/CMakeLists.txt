@@ -18,6 +18,6 @@ target_sources(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         model
 )

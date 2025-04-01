@@ -53,16 +53,16 @@ void AnalyticalSolver::solve()
               << "Converged reason: " << TaoConvergedReasons[convergedReason] << "\n";
 }
 
-Solution AnalyticalSolver::retrieveSolution() const
+Model::Positions AnalyticalSolver::retrieveSolution() const
 {
     const double* xArr = nullptr;
     if (VecGetArrayRead(x_, &xArr) != PETSC_SUCCESS) {
         return {};
     }
-    Solution solution(varCnt_);
-    for (size_t i = 0; i < varCnt_; ++i) {
-        solution[i].x = xArr[i * 2 + 1];
-        solution[i].y = xArr[i * 2 + 2];
+    Model::Positions solution(roomCnt_);
+    for (size_t i = 0; i < roomCnt_; ++i) {
+        solution[i].x = xArr[i * 2];
+        solution[i].y = xArr[i * 2 + 1];
     }
     static_cast<void>(VecRestoreArrayRead(x_, &xArr));
     return solution;
@@ -168,7 +168,7 @@ void AnalyticalSolver::destroyTAOObjects()
 
 AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
 {
-    assert(JEqCache_.size() == cEqCnt_ && JEqCache_[0].size() == varCnt_);
+    assert(JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_));
     for (size_t i = 0; i < cEqCnt_; ++i) {
         JEqCache_[i].assign(varCnt_, 0);
     }

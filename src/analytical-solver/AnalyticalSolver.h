@@ -3,18 +3,14 @@
 #include <vector>
 
 #include <functions/Defs.h>
+#include <model/Model.h>
+#include <model/Room.h>
 #include <petsctao.h>
 
 #include "TAOCallbacks.h"
 
 namespace DungeonGenerator {
 namespace AnalyticalSolver {
-
-struct Position {
-    double x;
-    double y;
-};
-using Solution = std::vector<Position>;
 
 class AnalyticalSolver {
     // Temporary, check comment for JEqCache
@@ -29,7 +25,7 @@ public:
 
     void solve();
 
-    Solution retrieveSolution() const;
+    Model::Positions retrieveSolution() const;
 
 private:
     PetscErrorCode initializeTAOSolvers();

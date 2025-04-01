@@ -1,0 +1,7 @@
+[requires]
+svgwrite/0.2.0
+[generators]
+CMakeDeps
+CMakeToolchain
+[layout]
+cmake_layout

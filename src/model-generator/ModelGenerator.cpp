@@ -7,16 +7,16 @@ namespace DungeonGenerator {
 Model::Model ModelGenerator::generateDungeon(size_t roomCount) const
 {
     // TODO: implement
-    return generateTree(roomCount);
+    throw std::runtime_error("ModelGenerator::generateDungeon is not implemented yet");
 }
 
 /*
-Generates dungeon with this structure with given grid side (example's for gidSide = 2):
+Generates dungeon with this structure with fixed grid side (example's for gidSide = 2):
 ┌───┐ ┌───┐
-│   ├─┤   │
+│ 0 ├─┤ 1 │
 └─┬─┘ └─┬─┘
 ┌─┴─┐ ┌─┴─┐
-│   ├─┤   │
+│ 2 ├─┤ 3 │
 └───┘ └───┘
 In code doors in a room are indexed in this way:
     2
@@ -27,14 +27,11 @@ In code doors in a room are indexed in this way:
 */
 Model::Model ModelGenerator::generateGrid(size_t gridSide) const
 {
-    constexpr double roomWidth = 10.0;
-    constexpr double roomHeight = 10.0;
-    const std::vector<Model::Door> doors{
-        Model::Door{.dx = roomWidth / 2,            .dy = 0.0},
-        Model::Door{          .dx = 0.0, .dy = roomHeight / 2},
-        Model::Door{.dx = roomWidth / 2,     .dy = roomHeight},
-        Model::Door{    .dx = roomWidth, .dy = roomHeight / 2},
-    };
+    constexpr double roomWidth = 20.0;
+    constexpr double roomHeight = 20.0;
+    // Distances between rooms on X and Y axises
+    constexpr double dx = roomWidth / 4;
+    constexpr double dy = roomHeight / 4;
     auto getRoomId = [gridSide](size_t row, size_t col) -> size_t {
         assert(row < gridSide && col < gridSide && "Invalid grid coordinates");
         return row * gridSide + col;
@@ -48,10 +45,14 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
             rooms[roomId].id = roomId;
             rooms[roomId].width = roomWidth;
             rooms[roomId].height = roomHeight;
-            rooms[roomId].doors = doors;
-            for (Model::Door& door : rooms[roomId].doors) {
-                door.roomId = roomId;
-            }
+            rooms[roomId].doors = {
+                Model::Door{           .dx = 0.0, .dy = -roomHeight / 2, .parentRoom = rooms[roomId]},
+                Model::Door{.dx = -roomWidth / 2,             .dy = 0.0, .parentRoom = rooms[roomId]},
+                Model::Door{           .dx = 0.0,  .dy = roomHeight / 2, .parentRoom = rooms[roomId]},
+                Model::Door{ .dx = roomWidth / 2,             .dy = 0.0, .parentRoom = rooms[roomId]},
+            };
+            rooms[roomId].centerPosition =
+                Model::Position{.x = col * (roomWidth + dx), .y = (gridSide - row - 1) * (roomHeight + dy)};
         }
     }
 
@@ -70,13 +71,13 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
             }
         }
     }
-    return Model::Model{.rooms = std::move(rooms), .corridors = std::move(corridors)};
+    return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
 Model::Model ModelGenerator::generateTree(size_t roomCount) const
 {
     // TODO: implement
-    return {};
+    throw std::runtime_error("ModelGenerator::generateTree is not implemented yet");
 }
 
 }  // namespace DungeonGenerator

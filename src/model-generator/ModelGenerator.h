@@ -10,7 +10,7 @@ namespace DungeonGenerator {
 // TODO: add more configuration options
 class ModelGenerator {
 public:
-    // Main generating function. Not yet defined.
+    // Main generating function. Not yet implemented.
     Model::Model generateDungeon(size_t roomCount) const;
 
     // Generation functions with predefined structure. Used in tests.
@@ -18,9 +18,9 @@ public:
     Model::Model generateTree(size_t roomCount) const;
 
 private:
-    static constexpr size_t SEED = 42;
+    static constexpr size_t kSeed = 42;
 
-    std::mt19937 rng_ = std::mt19937(SEED);  // random number generator
+    std::mt19937 rng_ = std::mt19937(kSeed);  // random number generator
 };
 
 }  // namespace DungeonGenerator

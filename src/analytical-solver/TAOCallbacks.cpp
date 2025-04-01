@@ -207,14 +207,16 @@ PetscErrorCode monitorALMM(Tao almmSolver, void* ctx)
     if (varCnt <= ARRAY_PRINT_LIMIT) {
         const double* x;
         PetscCall(VecGetArrayRead(solver->x_, &x));
+        Vec LgradX;
+        PetscCall(TaoALMMGetMultipliers(almmSolver, &LgradX));
         const double* LgradXArr;
-        PetscCall(VecGetArrayRead(almmData->LgradX, &LgradXArr));
+        PetscCall(VecGetArrayRead(LgradX, &LgradXArr));
 
         std::cerr << padding << "solution: " << arrayToString(x, varCnt) << "\n";
         std::cerr << padding << "LgradX: " << arrayToString(LgradXArr, varCnt) << "\n";
 
         PetscCall(VecRestoreArrayRead(solver->x_, &x));
-        PetscCall(VecRestoreArrayRead(almmData->LgradX, &LgradXArr));
+        PetscCall(VecRestoreArrayRead(LgradX, &LgradXArr));
     }
     if (cEqCnt != 0 && cEqCnt <= ARRAY_PRINT_LIMIT) {
         const double* cEq;

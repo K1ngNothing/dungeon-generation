@@ -14,5 +14,11 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         analytical-solver
         functions
+        model
         model-generator
+)
+
+target_compile_options(${PROJECT_NAME}
+    PRIVATE
+        -DPATH_TO_SVG="${CMAKE_BINARY_DIR}"
 )

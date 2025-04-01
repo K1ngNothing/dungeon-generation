@@ -17,14 +17,16 @@ void CorridorLength::operator()(const double* x, double& f, double* grad) const
 
     const double dx = x1 - x2;
     const double dy = y1 - y2;
-    const double gradX1 = 2 * dx;
-    const double gradY1 = 2 * dy;
-
     f += dx * dx + dy * dy;
-    grad[x1Id] += gradX1;
-    grad[y1Id] += gradY1;
-    grad[x2Id] -= gradX1;
-    grad[y2Id] -= gradY1;
+
+    if (grad != nullptr) {
+        const double gradX1 = 2 * dx;
+        const double gradY1 = 2 * dy;
+        grad[x1Id] += gradX1;
+        grad[y1Id] += gradY1;
+        grad[x2Id] -= gradX1;
+        grad[y2Id] -= gradY1;
+    }
 }
 
 }  // namespace Functions

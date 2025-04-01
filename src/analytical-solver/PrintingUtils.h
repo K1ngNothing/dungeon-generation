@@ -6,7 +6,7 @@ namespace DungeonGenerator {
 namespace AnalyticalSolver {
 namespace PrintingUtils {
 
-constexpr size_t ARRAY_PRINT_LIMIT = 0;  // How many variables are we willing to print
+constexpr size_t ARRAY_PRINT_LIMIT = 8;  // How many variables are we willing to print
 constexpr size_t PRINT_PRECISION = 8;    // Precision for printing double values
 
 // Helper class for setting output precision
