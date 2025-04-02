@@ -21,7 +21,7 @@ struct Door {
 
     Variables getVariables(const double* x) const;
     VariablesIds getVariablesIds() const;
-    std::optional<Position> getPosition() const;
+    std::optional<Position> getCenterPosition() const;
     void dumpToSVG(svgw::writer& svgWriter) const;
 };
 

@@ -21,7 +21,7 @@ VariablesIds Door::getVariablesIds() const
     return VariablesIds{.xId = parentRoom.get().id * 2, .yId = parentRoom.get().id * 2 + 1};
 }
 
-std::optional<Position> Door::getPosition() const
+std::optional<Position> Door::getCenterPosition() const
 {
     if (!parentRoom.get().centerPosition.has_value()) {
         return std::nullopt;
@@ -34,9 +34,10 @@ std::optional<Position> Door::getPosition() const
 
 void Door::dumpToSVG(svgw::writer& svgWriter) const
 {
-    assert(getPosition().has_value() && "Doom:dumpToSVG: no position is set");
+    assert(getCenterPosition().has_value() && "Doom:dumpToSVG: no position is set");
 
-    Position position = getPosition().value();
+    Position position = getCenterPosition().value();
+    // TODO: remove hard code
     constexpr double width = 2.5;
     constexpr double height = 2.5;
 

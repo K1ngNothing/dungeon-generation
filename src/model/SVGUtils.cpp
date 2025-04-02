@@ -12,7 +12,7 @@ std::string getSVGRectangle(
     y = -y - height;  // invert Y axis; note that LB position is now different
     std::stringstream sstream;
     sstream << "<rect x=\"" << x << "\" y=\"" << y << "\" width=\"" << width << "\" height=\"" << height << "\" fill=\""
-            << color << "\">";
+            << color << "\" stroke=\"black\" stroke-width=\"0.5\">";
     if (!text.empty()) {
         sstream << "<title>" << text << "</title>";
     }

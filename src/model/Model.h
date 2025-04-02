@@ -29,9 +29,11 @@ public:
     void setPositions(const Positions& roomPositions);
 
     // Very rough SVG dumper. It maybe will be removed in favor of SFML.
-    void dumpToSVG(const Positions& roomPositions, const std::filesystem::path& outputPath) const;
+    void dumpToSVG(const std::filesystem::path& outputPath) const;
 
 private:
+    std::array<double, 4> calculateViewBox() const;
+
     Rooms rooms_;
     Corridors corridors_;
 };

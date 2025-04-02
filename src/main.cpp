@@ -23,7 +23,7 @@ int main()
     ModelGenerator modelGenerator;
     constexpr size_t gridSide = 5;
     Model::Model gridModel = modelGenerator.generateGrid(gridSide);
-    gridModel.dumpToSVG({}, kPathToSVG / "grid_input.svg");
+    gridModel.dumpToSVG(kPathToSVG / "grid_input.svg");
 
     // 2. Create functions
     std::vector<Functions::FGEval> costFunctions;
@@ -45,7 +45,7 @@ int main()
     gridModel.setPositions(solution);
 
     // 4. Dump results
-    gridModel.dumpToSVG({}, kPathToSVG / "grid_result.svg");
+    gridModel.dumpToSVG(kPathToSVG / "grid_result.svg");
 
     // DEBUG
     // 5. Reevaluate functions
