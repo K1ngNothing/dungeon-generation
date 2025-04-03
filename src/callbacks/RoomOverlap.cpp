@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 namespace DungeonGenerator {
-namespace Functions {
+namespace Callbacks {
 
 RoomOverlap::RoomOverlap(const Model::Room& room1, const Model::Room& room2)
       : room1_(room1),
@@ -24,11 +24,11 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
     const auto [x1Id, y1Id] = room1_.getVariablesIds();
     const auto [x2Id, y2Id] = room2_.getVariablesIds();
 
-    const double dx = std::abs(x1 - x2);
-    const double dy = std::abs(y1 - y2);
+    const double dx = x1 - x2;
+    const double dy = y1 - y2;
     const double sumHalfWidth = (room1_.width + room2_.width) / 2;
     const double sumHalfHeight = (room1_.height + room2_.height) / 2;
-    if (dx >= sumHalfWidth || dy >= sumHalfHeight) {
+    if (std::abs(dx) >= sumHalfWidth || std::abs(dy) >= sumHalfHeight) {
         // Rooms do not intersect
         return;
     }
@@ -50,8 +50,9 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
     const double fy = yRatio * yRatio - 1;
     const double fySquared = fy * fy;
 
-    f += fxSquared * fySquared;
-    assert(fxSquared * fySquared <= 1 && "Room overlap should be in range [0, 1]");
+    const double fVal = fxSquared * fySquared;
+    f += fVal;
+    assert(fVal <= 1 && "Room overlap should be in range [0, 1]");
 
     if (grad != nullptr) {
         const double gradX1 = 4 * fySquared * fx * dx / (sumHalfWidth * sumHalfWidth);
@@ -67,5 +68,5 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
     //           << ", gradX1: " << gradX1 << ", gradY1: " << gradY1 << "\n";
 }
 
-}  // namespace Functions
+}  // namespace Callbacks
 }  // namespace DungeonGenerator

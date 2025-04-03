@@ -19,7 +19,7 @@ struct Door {
 
     std::reference_wrapper<Room> parentRoom;
 
-    Variables getVariables(const double* x) const;
+    Variables getVariablesValues(const double* x) const;
     VariablesIds getVariablesIds() const;
     std::optional<Position> getCenterPosition() const;
     void dumpToSVG(svgw::writer& svgWriter) const;

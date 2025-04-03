@@ -74,10 +74,38 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-Model::Model ModelGenerator::generateTree(size_t roomCount) const
+/// Generates a dungeon based on random tree. For simplicity's sake we set each door
+/// to be in the center of the room (which automatically avoids a need for rotations).
+Model::Model ModelGenerator::generateTree(size_t roomCount)
 {
-    // TODO: implement
-    throw std::runtime_error("ModelGenerator::generateTree is not implemented yet");
+    assert(roomCount > 0);
+    std::vector<std::pair<int, int>> roomsDimensions{
+        {20, 20},
+        {20, 40},
+        {40, 20},
+        {30, 30}
+    };
+
+    // 1. Create rooms and doors
+    Model::Rooms rooms(roomCount);
+    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
+        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        rooms[roomId].id = roomId;
+        rooms[roomId].width = roomWidth;
+        rooms[roomId].height = roomHeight;
+        rooms[roomId].doors = {
+            Model::Door{.dx = 0.0, .dy = 0.0, .parentRoom = rooms[roomId]},
+        };
+    }
+
+    // 2. Add corridors
+    std::vector<Model::Corridor> corridors;
+    corridors.reserve(roomCount - 1);
+    for (size_t roomId = 1; roomId < roomCount; ++roomId) {
+        size_t otherRoom = rng_() % roomId;
+        corridors.push_back({rooms[roomId].doors[0], rooms[otherRoom].doors[0]});
+    }
+    return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
 }  // namespace DungeonGenerator

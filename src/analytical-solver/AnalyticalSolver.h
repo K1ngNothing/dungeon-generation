@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <functions/Defs.h>
+#include <callbacks/Defs.h>
 #include <model/Model.h>
 #include <model/Room.h>
 #include <petsctao.h>
@@ -18,8 +18,10 @@ class AnalyticalSolver {
 
 public:
     AnalyticalSolver(
-        size_t roomCnt, std::vector<Functions::FGEval>&& costFunctions,
-        std::vector<Functions::FGEval>&& equalityConstraints);
+        size_t roomCnt, std::vector<Callbacks::FGEval>&& costFunctions,
+        std::vector<Callbacks::FGEval>&& equalityConstraints,
+        std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
+        std::vector<Callbacks::ReaderCallback>&& readerCallbacks);
 
     ~AnalyticalSolver();
 
@@ -49,8 +51,10 @@ private:
     size_t roomCnt_;
     size_t varCnt_;
     size_t cEqCnt_;
-    std::vector<Functions::FGEval> costFunctions_;
-    std::vector<Functions::FGEval> equalityConstraints_;
+    std::vector<Callbacks::FGEval> costFunctions_;
+    std::vector<Callbacks::FGEval> equalityConstraints_;
+    std::vector<Callbacks::ModifierCallback> modifierCallbacks_;
+    std::vector<Callbacks::ReaderCallback> readerCallbacks_;
 
     // TAO solvers
     Tao almmSolver_ = nullptr;

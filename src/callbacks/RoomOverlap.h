@@ -3,7 +3,7 @@
 #include <model/Room.h>
 
 namespace DungeonGenerator {
-namespace Functions {
+namespace Callbacks {
 
 class RoomOverlap {
 public:
@@ -15,5 +15,5 @@ private:
     const Model::Room& room2_;
 };
 
-}  // namespace Functions
+}  // namespace Callbacks
 }  // namespace DungeonGenerator

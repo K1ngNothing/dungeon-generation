@@ -3,9 +3,11 @@
 #include <functional>
 
 namespace DungeonGenerator {
-namespace Functions {
+namespace Callbacks {
 
 using FGEval = std::function<void(const double*, double&, double*)>;
+using ModifierCallback = std::function<void(double*)>;
+using ReaderCallback = std::function<void(const double*, int)>;
 
-}  // namespace Functions
+}  // namespace Callbacks
 }  // namespace DungeonGenerator

@@ -8,7 +8,7 @@
 namespace DungeonGenerator {
 namespace Model {
 
-Variables Door::getVariables(const double* x) const
+Variables Door::getVariablesValues(const double* x) const
 {
     Variables result = Utils::getVariables(parentRoom.get().id, x);
     result.varX += dx;

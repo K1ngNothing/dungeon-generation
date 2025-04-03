@@ -26,7 +26,7 @@ PetscErrorCode evaluateCostFunctionGradient(Tao almmSolver, Vec xVec, double* f,
     PetscCall(VecGetArrayRead(xVec, &xArr));
     PetscCall(VecGetArray(gVec, &gradArr));
 
-    for (const Functions::FGEval& costFunction : solver->costFunctions_) {
+    for (const Callbacks::FGEval& costFunction : solver->costFunctions_) {
         costFunction(xArr, *f, gradArr);
     }
 
@@ -94,48 +94,48 @@ PetscErrorCode almmConvergenceTest(Tao almmSolver, void* ctx)
     AnalyticalSolver* solver = reinterpret_cast<AnalyticalSolver*>(ctx);
 
     // Get solver info
-    double LGradNorm, gatol;
+    double LGradNorm, cnorm, gatol, catol;
     PetscInt iterNum, maxIterCount;
-    PetscCall(TaoGetSolutionStatus(almmSolver, &iterNum, nullptr, &LGradNorm, nullptr, nullptr, nullptr));
+    PetscCall(TaoGetSolutionStatus(almmSolver, &iterNum, nullptr, &LGradNorm, &cnorm, nullptr, nullptr));
     PetscCall(TaoGetTolerances(almmSolver, &gatol, nullptr, nullptr));
+    PetscCall(TaoGetConstraintTolerances(almmSolver, &catol, nullptr));
     PetscCall(TaoGetMaximumIterations(almmSolver, &maxIterCount));
 
     // Override some parameters of ALMM solver that can't be overwritten otherwise
     if (iterNum == 0) {
         TAO_ALMM* almmData = reinterpret_cast<TAO_ALMM*>(almmSolver->data);
-        almmData->mu0 = 25;
+        almmData->mu = 0;
         almmData->mu_fac = 25;
+    } else if (iterNum == 1) {
+        // ALMM recalculates penalty as mu *= mu_fac. We set mu = 0 at the first iteration, so we need to set it to 1.
+        TAO_ALMM* almmData = reinterpret_cast<TAO_ALMM*>(almmSolver->data);
+        almmData->mu = 1;
     }
 
     // (!) Do custom convergence checks
     TaoConvergedReason reason = TAO_CONTINUE_ITERATING;
     if (iterNum >= maxIterCount) {
         reason = TAO_DIVERGED_MAXITS;
-    } else if (LGradNorm < gatol) {
+    } else if (LGradNorm < gatol && cnorm < catol) {
         // TODO: it's seems weird to check gradient norm. Ideally subsolver should only stop if
-        // gradient is close to zero, and therefore this check shouldn't check anything.
+        // gradient is close to zero, and therefore this check shouldn't do anything.
         // Nevertheless I will leave it for the time being, because it was working fine as is.
-
-        // Check penalties
-        const double* cEqArr;
-        PetscCall(VecGetArrayRead(solver->cEq_, &cEqArr));
-
-        bool allConstraintsSatisfied = true;
-        constexpr double constraintTolerance = 1e-3;
-        const size_t cEqCnt = solver->cEqCnt_;
-        for (size_t i = 0; i < cEqCnt; ++i) {
-            if (std::abs(cEqArr[i]) > constraintTolerance) {
-                allConstraintsSatisfied = false;
-                break;
-            }
-        }
-        if (allConstraintsSatisfied) {
-            reason = TAO_CONVERGED_GATOL;
-        }
-
-        PetscCall(VecRestoreArrayRead(solver->cEq_, &cEqArr));
+        reason = TAO_CONVERGED_GATOL;
     }
     PetscCall(TaoSetConvergedReason(almmSolver, reason));
+
+    // Run callbacks that should be ran after each iteration
+    if (iterNum > 0) {
+        double* xArr;
+        PetscCall(VecGetArray(solver->x_, &xArr));
+        for (const Callbacks::ModifierCallback& callback : solver->modifierCallbacks_) {
+            callback(xArr);
+        }
+        for (const Callbacks::ReaderCallback& callback : solver->readerCallbacks_) {
+            callback(xArr, iterNum);
+        }
+        PetscCall(VecRestoreArray(solver->x_, &xArr));
+    }
 
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -166,7 +166,7 @@ PetscErrorCode monitorALMM(Tao almmSolver, void* ctx)
     PetscCall(VecGetSize(multipliersVec, &multipliersCnt));
 
     // Get ALMM guts (uses private TAO declarations)
-    TAO_ALMM* almmData = reinterpret_cast<TAO_ALMM*>(almmSolver);
+    TAO_ALMM* almmData = reinterpret_cast<TAO_ALMM*>(almmSolver->data);
 
     const std::string padding = "                 ";
     if (iterNum == 0) {

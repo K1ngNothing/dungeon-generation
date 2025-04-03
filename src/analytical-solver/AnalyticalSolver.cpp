@@ -7,14 +7,17 @@ namespace DungeonGenerator {
 namespace AnalyticalSolver {
 
 AnalyticalSolver::AnalyticalSolver(
-    size_t roomCnt, std::vector<Functions::FGEval>&& costFunctions,
-    std::vector<Functions::FGEval>&& equalityConstraints)
+    size_t roomCnt, std::vector<Callbacks::FGEval>&& costFunctions,
+    std::vector<Callbacks::FGEval>&& equalityConstraints, std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
+    std::vector<Callbacks::ReaderCallback>&& readerCallbacks)
       : roomCnt_(roomCnt),
         varCnt_(roomCnt * 2),
         cEqCnt_(equalityConstraints.size()),
         JEqCache_(cEqCnt_, std::vector<double>(varCnt_)),
         costFunctions_(std::move(costFunctions)),
-        equalityConstraints_(std::move(equalityConstraints))
+        equalityConstraints_(std::move(equalityConstraints)),
+        modifierCallbacks_(std::move(modifierCallbacks)),
+        readerCallbacks_(std::move(readerCallbacks))
 {
     if (PetscInitializeNoArguments() != PETSC_SUCCESS) {
         throw std::runtime_error("AnalyticalSolver:: failed to initialize PETSc");
@@ -77,14 +80,22 @@ PetscErrorCode AnalyticalSolver::initializeTAOSolvers()
     PetscCall(TaoALMMGetSubsolver(almmSolver_, &almmSubsolver_));
 
     constexpr size_t almmMaxIterCount = 25;
+    // Theoretically for quadratic functions we should converge in varCnt_ iterations.
+    // For practical functions it's safe to set the limit as some factor of varCnt_.
     const size_t subsolverMaxIterCount = 10 * varCnt_;
-    const size_t subsolverMaxFcn = 10 * subsolverMaxIterCount;
+    const size_t subsolverMaxFcn = 10 * subsolverMaxIterCount;  // why?
+    constexpr double almmGatol = 1e-3;                          // Absolute gradient tolerance
+    constexpr double almmCatol = 1e-3;                          // Absolute constraint tolerance
+    // TODO: for some reason PHR doesn't support gatol != catol. I can circumvent this by setting these constants inside
+    // convergence test. For now I leave them equal because I don't see the problem with that.
 
     PetscCall(TaoALMMSetType(almmSolver_, TAO_ALMM_PHR));
     PetscCall(TaoSetType(almmSubsolver_, TAOBQNLS));
     PetscCall(TaoSetMaximumIterations(almmSolver_, almmMaxIterCount));
     PetscCall(TaoSetMaximumIterations(almmSubsolver_, subsolverMaxIterCount));
     PetscCall(TaoSetMaximumFunctionEvaluations(almmSubsolver_, subsolverMaxFcn));
+    PetscCall(TaoSetTolerances(almmSolver_, almmGatol, 0, 0));
+    PetscCall(TaoSetConstraintTolerances(almmSolver_, almmCatol, 0));
 
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -98,16 +109,12 @@ PetscErrorCode AnalyticalSolver::initializeTAOContainers()
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &xUpperBound_));
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &costGradient_));
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, cEqCnt_, &cEq_));
-    // TODO: why dense? This matrix for the most part will be very sparse d.t. BFGS rank 2 update.
+    // TODO: why dense? This matrix for the most part should be sparse d.t. BFGS rank two update.
     PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, cEqCnt_, varCnt_, nullptr, &JEq_));
 
-    // Set initial solution so no rooms are overlapping exactly
-    double* xArr;
-    PetscCall(VecGetArray(x_, &xArr));
-    for (size_t i = 0; i < roomCnt_; ++i) {
-        xArr[i * 2] = xArr[i * 2 + 1] = i;
-    }
-    PetscCall(VecRestoreArray(x_, &xArr));
+    // Set initial solution to zero. The exact value doesn't matter, because at the first iteration constraints will
+    // be disabled, and therefore solver will find the solution where most of the corridors are exactly zero.
+    PetscCall(VecSet(x_, 0));
 
     // Tell TAO that there's no variable bounds
     PetscCall(VecSet(xLowerBound_, PETSC_NINFINITY));
@@ -150,6 +157,8 @@ PetscErrorCode AnalyticalSolver::setScaryOptionsInTAOSolvers()
     PetscCall(VecSet(almmMultipliers, 0.0));
     PetscCall(TaoSetRecycleHistory(almmSolver_, PETSC_TRUE));  // Otherwise they will be overwritten in TaoSolve
 
+    // I would like to configure m0 and mu_fac here, but they will be overwritten at the start of the TAOSolve.
+    // Therefore we're forced to set them inside the convergence test.
     PetscFunctionReturn(PETSC_SUCCESS);
 }
 
@@ -168,7 +177,9 @@ void AnalyticalSolver::destroyTAOObjects()
 
 AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
 {
-    assert(JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_));
+    assert(
+        JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_) &&
+        "Wrong JEqCache_ dimensions");
     for (size_t i = 0; i < cEqCnt_; ++i) {
         JEqCache_[i].assign(varCnt_, 0);
     }
@@ -177,6 +188,9 @@ AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
 
 std::vector<double> AnalyticalSolver::provideJEqCache() const
 {
+    assert(
+        JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_) &&
+        "Wrong JEqCache_ dimensions");
     std::vector<double> result(cEqCnt_ * varCnt_);
     for (size_t i = 0; i < cEqCnt_; ++i) {
         for (size_t j = 0; j < varCnt_; ++j) {

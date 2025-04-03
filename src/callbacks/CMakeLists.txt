@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(functions)
+project(callbacks)
 add_library(${PROJECT_NAME} STATIC
     CorridorLength.cpp
     RoomOverlap.cpp
+    RoomShaker.cpp
+    SVGDumper.cpp
 )
 
 target_sources(${PROJECT_NAME} PUBLIC
@@ -12,9 +14,9 @@ target_sources(${PROJECT_NAME} PUBLIC
     BASE_DIRS
         "../"
     FILES
-        "../functions/CorridorLength.h"
-        "../functions/Defs.h"
-        "../functions/RoomOverlap.h"
+        "../callbacks/CorridorLength.h"
+        "../callbacks/Defs.h"
+        "../callbacks/RoomOverlap.h"
 )
 
 target_link_libraries(${PROJECT_NAME}
