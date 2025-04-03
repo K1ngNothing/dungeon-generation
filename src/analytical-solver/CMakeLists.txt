@@ -17,19 +17,26 @@ target_sources(${PROJECT_NAME} PUBLIC
         "AnalyticalSolver.h"
 )
 
-# Set PETSc variables according to build type
-set(PETSC_DIR "../../petsc")
-set(PETSC_LIBS petsc mpi mpicxx f2clapack f2cblas)
-string(TOLOWER ${CMAKE_BUILD_TYPE} _build_type)
+# Check whether user specified PETSc variables. Use defaults if not set.
+set(PETSC_DIR "../../petsc" CACHE PATH "Path to PETSc directory")
+set(PETSC_ARCH "" CACHE STRING "PETSc build name (default oт linux: arch-linux-c-debug for Debug, arch-linux-c-opt for Release).")
 
-if(_build_type STREQUAL "release")
-    set(PETSC_ARCH "arch-linux-c-opt")
-else()
-    set(PETSC_ARCH "arch-linux-c-debug")
+# If PETSC_ARCH wasn't set by user, set it based on build type.
+if(NOT PETSC_ARCH)
+    string(TOLOWER ${CMAKE_BUILD_TYPE} _build_type)
+
+    if(_build_type STREQUAL "release")
+        set(PETSC_ARCH "arch-linux-c-opt")
+    else()
+        set(PETSC_ARCH "arch-linux-c-debug")
+    endif()
+
+    unset(_build_type)
+    message(STATUS "PETSC_ARCH not set, defaulting to ${PETSC_ARCH} (based on CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})")
 endif()
 
-unset(_build_type)
-
+# Link PETSc libraries based on variables (plus project's libraries)
+set(PETSC_LIBS petsc mpi mpicxx f2clapack f2cblas)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         "${PETSC_DIR}/include"
