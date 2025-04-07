@@ -36,6 +36,9 @@ private:
     PetscErrorCode setScaryOptionsInTAOSolvers();
     void destroyTAOObjects();
 
+    /// Run callbacks (e.g. SVG dump) after each ALMM iteration.
+    PetscErrorCode runCallbacks(int iterNum);
+
     // Temporary, check comment for JEqCache
     Matrix& provideZeroedJEqCache();
     std::vector<double> provideJEqCache() const;

@@ -175,6 +175,23 @@ void AnalyticalSolver::destroyTAOObjects()
     if (JEq_) static_cast<void>(MatDestroy(&JEq_));
 }
 
+PetscErrorCode AnalyticalSolver::runCallbacks(int iterNum)
+{
+    PetscFunctionBegin;
+
+    double* xArr;
+    PetscCall(VecGetArray(x_, &xArr));
+    for (const Callbacks::ModifierCallback& callback : modifierCallbacks_) {
+        callback(xArr);
+    }
+    for (const Callbacks::ReaderCallback& callback : readerCallbacks_) {
+        callback(xArr, iterNum);
+    }
+    PetscCall(VecRestoreArray(x_, &xArr));
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
 {
     assert(
