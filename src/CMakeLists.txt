@@ -22,3 +22,11 @@ target_compile_options(${PROJECT_NAME}
     PRIVATE
         -DPATH_TO_SVG="${CMAKE_BINARY_DIR}"
 )
+
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/google/googletest"
+    GIT_TAG v1.16.0
+)
+FetchContent_MakeAvailable(googletest)

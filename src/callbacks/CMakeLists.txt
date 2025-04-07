@@ -23,3 +23,5 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         model
 )
+
+add_subdirectory(tests)
