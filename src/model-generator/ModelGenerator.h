@@ -15,7 +15,8 @@ public:
 
     // Generation functions with predefined structure. Used in tests.
     Model::Model generateGrid(size_t gridSide) const;
-    Model::Model generateTree(size_t roomCount);
+    Model::Model generateTreeCenterRooms(size_t roomCount);
+    Model::Model generateTreeDungeon(size_t roomCount);
 
 private:
     static constexpr size_t kSeed = 42;

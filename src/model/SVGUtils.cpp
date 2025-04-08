@@ -6,7 +6,7 @@ namespace DungeonGenerator {
 namespace Model {
 namespace SVGUtils {
 
-std::string getSVGRectangle(
+std::string generateSVGRectangle(
     double x, double y, double width, double height, const std::string& color, const std::string& text)
 {
     y = -y - height;  // invert Y axis; note that LB position is now different

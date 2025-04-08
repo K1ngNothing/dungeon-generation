@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include <svgwrite/writer.hpp>
 
 #include "Defs.h"
@@ -16,13 +14,11 @@ struct Door {
     // Shifts on each axis relative to parent room center
     double dx;
     double dy;
-
-    std::reference_wrapper<Room> parentRoom;
+    size_t parentRoomId;
 
     Variables getVariablesValues(const double* x) const;
     VariablesIds getVariablesIds() const;
-    std::optional<Position> getCenterPosition() const;
-    void dumpToSVG(svgw::writer& svgWriter) const;
+    void dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const;
 };
 
 }  // namespace Model

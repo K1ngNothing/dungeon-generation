@@ -52,7 +52,7 @@ void Model::dumpToSVG(const std::filesystem::path& outputPath) const
         svgWriter.write("\n");
     }
     for (const Corridor& corridor : corridors_) {
-        corridor.dumpToSVG(svgWriter);
+        corridor.dumpToSVG(svgWriter, rooms_);
         svgWriter.write("\n");
     }
 

@@ -10,7 +10,7 @@ namespace Model {
 
 Variables Door::getVariablesValues(const double* x) const
 {
-    Variables result = Utils::getVariables(parentRoom.get().id, x);
+    Variables result = Utils::getVariables(parentRoomId, x);
     result.varX += dx;
     result.varY += dy;
     return result;
@@ -18,32 +18,18 @@ Variables Door::getVariablesValues(const double* x) const
 
 VariablesIds Door::getVariablesIds() const
 {
-    return VariablesIds{.xId = parentRoom.get().id * 2, .yId = parentRoom.get().id * 2 + 1};
+    return VariablesIds{.xId = parentRoomId * 2, .yId = parentRoomId * 2 + 1};
 }
 
-std::optional<Position> Door::getCenterPosition() const
+void Door::dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const
 {
-    if (!parentRoom.get().centerPosition.has_value()) {
-        return std::nullopt;
-    }
-    Position result = parentRoom.get().centerPosition.value();
-    result.x += dx;
-    result.y += dy;
-    return result;
-}
-
-void Door::dumpToSVG(svgw::writer& svgWriter) const
-{
-    assert(getCenterPosition().has_value() && "Doom:dumpToSVG: no position is set");
-
-    Position position = getCenterPosition().value();
     // TODO: remove hard code
     constexpr double width = 2.5;
     constexpr double height = 2.5;
 
-    double lbPosX = position.x - width / 2;
-    double lbPosY = position.y - height / 2;
-    svgWriter.write(SVGUtils::getSVGRectangle(lbPosX, lbPosY, width, height, "red"));
+    const double lbPosX = roomPosition.x + dx - width / 2;
+    const double lbPosY = roomPosition.y + dy - height / 2;
+    svgWriter.write(SVGUtils::generateSVGRectangle(lbPosX, lbPosY, width, height, "red"));
 }
 
 }  // namespace Model

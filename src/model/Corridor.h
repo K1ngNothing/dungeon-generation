@@ -5,6 +5,7 @@
 #include <svgwrite/writer.hpp>
 
 #include "Door.h"
+#include "Room.h"
 
 namespace DungeonGenerator {
 namespace Model {
@@ -13,7 +14,7 @@ struct Corridor {
     Door& door1;
     Door& door2;
 
-    void dumpToSVG(svgw::writer& svgWriter) const;
+    void dumpToSVG(svgw::writer& svgWriter, const Model::Rooms& rooms) const;
 };
 using Corridors = std::vector<Corridor>;
 

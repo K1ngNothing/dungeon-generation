@@ -91,12 +91,12 @@ void runTree()
 {
     // 1. Generate model
     ModelGenerator modelGenerator;
-    constexpr size_t roomCount = 100;
-    Model::Model model = modelGenerator.generateTree(roomCount);
+    constexpr size_t roomCount = 20;
+    Model::Model model = modelGenerator.generateTreeCenterRooms(roomCount);
     std::cout << "Tree edges:\n";
     for (const Model::Corridor& corridor : model.getCorridors()) {
-        size_t v = corridor.door1.parentRoom.get().id;
-        size_t u = corridor.door2.parentRoom.get().id;
+        size_t v = corridor.door1.parentRoomId;
+        size_t u = corridor.door2.parentRoomId;
         std::cout << v << ' ' << u << "\n";
     }
 

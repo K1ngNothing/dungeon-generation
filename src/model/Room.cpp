@@ -34,10 +34,10 @@ void Room::dumpToSVG(svgw::writer& svgWriter) const
     Position lbPos = getLBPosition().value();
 
     const std::string text = "room " + std::to_string(id);
-    svgWriter.write(SVGUtils::getSVGRectangle(lbPos.x, lbPos.y, width, height, "yellow", text));
+    svgWriter.write(SVGUtils::generateSVGRectangle(lbPos.x, lbPos.y, width, height, "yellow", text));
 
     for (const Door& door : doors) {
-        door.dumpToSVG(svgWriter);
+        door.dumpToSVG(svgWriter, centerPosition.value());
     }
 }
 
