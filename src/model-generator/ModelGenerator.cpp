@@ -6,7 +6,7 @@ namespace DungeonGenerator {
 
 namespace {
 
-Model::Room createRoomFourDoors(double width, double height, Model::Position center, size_t id)
+Model::Room createRoomFourDoors(size_t id, double width, double height, Model::Position center = {0, 0})
 {
     const double doorDx = width * 0.4;
     const double doorDy = height * 0.4;
@@ -68,7 +68,7 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
             const size_t roomId = getRoomId(row, col);
             const Model::Position center{
                 .x = col * (roomWidth + roomDistX), .y = (gridSide - row - 1) * (roomHeight + roomDistY)};
-            rooms.emplace_back(createRoomFourDoors(roomWidth, roomHeight, center, roomId));
+            rooms.emplace_back(createRoomFourDoors(roomId, roomWidth, roomHeight, center));
         }
     }
 
@@ -124,9 +124,52 @@ Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-Model::Model ModelGenerator::generateTreeDungeon(size_t roomCnt)
+Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
 {
-    throw std::runtime_error("ModelGenerator::generateTreeDungeon is not implemented yet");
+    assert(roomCount > 0);
+    std::vector<std::pair<int, int>> roomsDimensions{
+        {20, 20},
+ // {20, 40},
+  // {40, 20},
+  // {30, 30}
+    };
+    Model::Rooms rooms;
+    rooms.reserve(roomCount);
+    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
+        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        rooms.emplace_back(createRoomFourDoors(roomId, roomWidth, roomHeight));
+    }
+
+    // Algorithm: choose random room with id < roomId and connect them East-West or North-South
+    std::vector<Model::Corridor> corridors;
+    std::vector<std::array<bool, 4>> availableDoors(roomCount, {true, true, true, true});
+    for (size_t roomId = 1; roomId < roomCount; ++roomId) {
+        bool connectionAdded = false;
+        while (!connectionAdded) {
+            size_t otherRoom = rng_() % roomId;
+
+            // Find possible connections between chosen rooms
+            std::vector<size_t> possibleConnections;
+            for (size_t side = 0; side < 4; ++side) {
+                size_t otherSide = (side + 2) % 4;
+                if (availableDoors[roomId][side] && availableDoors[otherRoom][otherSide]) {
+                    possibleConnections.push_back(side);
+                }
+            }
+
+            // Pick random possible connection
+            if (possibleConnections.empty()) {
+                continue;
+            }
+            size_t side = possibleConnections[rng_() % possibleConnections.size()];
+            size_t otherSide = (side + 2) % 4;
+            corridors.push_back({rooms[roomId].doors[side], rooms[otherRoom].doors[otherSide]});
+            availableDoors[roomId][side] = false;
+            availableDoors[otherRoom][otherSide] = false;
+            connectionAdded = true;
+        }
+    }
+    return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
 }  // namespace DungeonGenerator
