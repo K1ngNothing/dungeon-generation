@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 project(callbacks)
 add_library(${PROJECT_NAME} STATIC
     CorridorLength.cpp
+    PushForce.cpp
     RoomOverlap.cpp
     RoomShaker.cpp
     SVGDumper.cpp

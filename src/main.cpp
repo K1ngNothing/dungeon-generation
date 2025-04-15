@@ -3,6 +3,7 @@
 
 #include <AnalyticalSolver.h>
 #include <callbacks/CorridorLength.h>
+#include <callbacks/PushForce.h>
 #include <callbacks/RoomOverlap.h>
 #include <callbacks/RoomShaker.h>
 #include <callbacks/SVGDumper.h>
@@ -17,6 +18,9 @@ std::filesystem::path kPathToSVG
 };
 using namespace DungeonGenerator;
 
+// Settings
+constexpr bool kEnablePushForce = true;
+
 void runSolver(Model::Model& model)
 {
     // 1. Create callbacks
@@ -24,6 +28,10 @@ void runSolver(Model::Model& model)
     for (const auto& [door1, door2] : model.getCorridors()) {
         costFunctions.push_back(Callbacks::CorridorLength(door1, door2));
     }
+    if (kEnablePushForce) {
+        costFunctions.push_back(Callbacks::PushForce(model, 10, 5));
+    }
+
     std::vector<Callbacks::FGEval> penaltyFunctions;
     const Model::Rooms& rooms = model.getRooms();
     for (size_t i = 0; i < rooms.size(); ++i) {
@@ -31,6 +39,7 @@ void runSolver(Model::Model& model)
             penaltyFunctions.push_back(Callbacks::RoomOverlap(rooms[i], rooms[j]));
         }
     }
+
     std::vector<Callbacks::ModifierCallback> modifierCallbacks{Callbacks::RoomShaker(model)};
     std::vector<Callbacks::ReaderCallback> readerCallbacks{Callbacks::SVGDumper(model, kPathToSVG, "iter")};
 
@@ -56,42 +65,13 @@ void runGrid()
 
     // 3. Dump results
     model.dumpToSVG(kPathToSVG / "grid_result.svg");
-
-    // DEBUG
-    // 4. Reevaluate functions
-    // std::vector<double> xVec;
-    // for (const auto [x, y] : solution) {
-    //     xVec.push_back(x);
-    //     xVec.push_back(y);
-    // }
-    // std::cout << "TWL: ";
-    // for (const auto& [door1, door2] : gridModel.getCorridors()) {
-    //     auto func = Callbacks::CorridorLength(door1, door2);
-    //     double val = 0.0;
-    //     func(xVec.data(), val, nullptr);
-    //     std::cout << val << ' ';
-    // }
-    // std::cout << "\nOverlap:\n";
-    // for (size_t i = 0; i < rooms.size(); ++i) {
-    //     for (size_t j = 0; j < rooms.size(); ++j) {
-    //         if (i == j) {
-    //             std::cout << 1.0 << ' ';
-    //             continue;
-    //         }
-    //         auto func = Callbacks::RoomOverlap(rooms[i], rooms[j]);
-    //         double val = 0.0;
-    //         func(xVec.data(), val, nullptr);
-    //         std::cout << val << ' ';
-    //     }
-    //     std::cout << "\n";
-    // }
 }
 
 void runTree()
 {
     // 1. Generate model
     ModelGenerator modelGenerator;
-    constexpr size_t roomCount = 100;
+    constexpr size_t roomCount = 50;
     Model::Model model = modelGenerator.generateTreeDungeon(roomCount);
     std::cout << "Tree edges:\n";
     for (const Model::Corridor& corridor : model.getCorridors()) {

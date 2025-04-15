@@ -5,6 +5,7 @@ project(callbacks_test)
 add_executable(${PROJECT_NAME}
     CorridorLengthTests.cpp
     OverlapTests.cpp
+    PushForceTests.cpp
 )
 
 target_link_libraries(

@@ -51,7 +51,7 @@ TEST(CallbacksTests, OverlapGradientTest)
     std::uniform_real_distribution<double> varDistribution(-17, 17);  // To have a chance of no intersection
     std::mt19937 rng(42);
 
-    constexpr size_t iterCount = 100;
+    constexpr size_t iterCount = 10000;
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
         for (size_t i = 2; i < 4; ++i) {  // Second room has random position
