@@ -62,8 +62,8 @@ void PushForce::calculatePush(RoomPair rooms, const double* x, double& f, double
     const Model::Room& room1 = allRooms[rooms.roomId1];
     const Model::Room& room2 = allRooms[rooms.roomId2];
 
-    const auto [x1, y1] = room1.getVariables(x);
-    const auto [x2, y2] = room2.getVariables(x);
+    const auto [x1, y1] = room1.getVariablesVal(x);
+    const auto [x2, y2] = room2.getVariablesVal(x);
     const auto [x1Id, y1Id] = room1.getVariablesIds();
     const auto [x2Id, y2Id] = room2.getVariablesIds();
 

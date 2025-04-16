@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME} STATIC
     Model.cpp
     Room.cpp
     SVGUtils.cpp
+    Variables.cpp
 )
 
 target_sources(${PROJECT_NAME} PUBLIC

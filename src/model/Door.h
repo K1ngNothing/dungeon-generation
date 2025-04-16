@@ -3,12 +3,9 @@
 #include <svgwrite/writer.hpp>
 
 #include "Defs.h"
-#include "Variables.h"
 
 namespace DungeonGenerator {
 namespace Model {
-
-struct Room;
 
 struct Door {
     // Shifts on each axis relative to parent room center
@@ -16,8 +13,7 @@ struct Door {
     double dy;
     size_t parentRoomId;
 
-    Variables getVariablesValues(const double* x) const;
-    VariablesIds getVariablesIds() const;
+    Position getPosition(const double* x) const;
     void dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const;
 };
 

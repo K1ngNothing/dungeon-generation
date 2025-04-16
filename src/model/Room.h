@@ -14,15 +14,12 @@ namespace Model {
 
 struct Door;
 
-struct Room {
-    size_t id;
+struct Room : ObjectWithVars {
     double width;
     double height;
     std::vector<Door> doors;
     std::optional<Position> centerPosition;
 
-    Variables getVariables(const double* x) const;
-    VariablesIds getVariablesIds() const;
     std::optional<Position> getLBPosition() const;
     void dumpToSVG(svgw::writer& svgWriter) const;
 };

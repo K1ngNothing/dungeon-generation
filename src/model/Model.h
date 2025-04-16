@@ -23,6 +23,7 @@ public:
     Model(const Model& other) = delete;
     Model& operator=(const Model& other) = delete;
 
+    Room getRoom(size_t id) const;
     const Rooms& getRooms() const;
     const Corridors& getCorridors() const;
 

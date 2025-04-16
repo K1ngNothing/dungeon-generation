@@ -5,36 +5,29 @@
 namespace DungeonGenerator {
 namespace Model {
 
-struct Variables {
-    double varX;
-    double varY;
-};
-
-struct VariablesRef {
-    double& varX;
-    double& varY;
-};
-
 struct VariablesIds {
     size_t xId;
     size_t yId;
 };
 
-namespace Utils {
+struct Variables {
+    double varX;
+    double varY;
+};
 
-// TODO: maybe create a base class `ObjectWithVars` and inherit Door and Room from it?
+namespace VarUtils {
 
-inline Variables getVariables(size_t roomId, const double* x)
-{
-    return Variables{.varX = x[roomId * 2], .varY = x[roomId * 2 + 1]};
-}
+VariablesIds getVariablesIds(size_t id);
+Variables getVariablesVal(const double* x, size_t id);
 
-inline VariablesRef getVariablesRef(size_t roomId, double* x)
-{
-    return VariablesRef{.varX = x[roomId * 2], .varY = x[roomId * 2 + 1]};
-}
+}  // namespace VarUtils
 
-}  // namespace Utils
+struct ObjectWithVars {
+    size_t id;
+
+    VariablesIds getVariablesIds() const;
+    Variables getVariablesVal(const double* x) const;
+};
 
 }  // namespace Model
 }  // namespace DungeonGenerator

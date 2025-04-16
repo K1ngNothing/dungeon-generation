@@ -19,8 +19,8 @@ RoomOverlap::RoomOverlap(const Model::Room& room1, const Model::Room& room2)
 
 void RoomOverlap::operator()(const double* x, double& f, double* grad) const
 {
-    const auto [x1, y1] = room1_.getVariables(x);
-    const auto [x2, y2] = room2_.getVariables(x);
+    const auto [x1, y1] = room1_.getVariablesVal(x);
+    const auto [x2, y2] = room2_.getVariablesVal(x);
     const auto [x1Id, y1Id] = room1_.getVariablesIds();
     const auto [x2Id, y2Id] = room2_.getVariablesIds();
 
@@ -62,10 +62,6 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
         grad[x2Id] -= gradX1;
         grad[y2Id] -= gradY1;
     }
-
-    // DEBUG
-    // std::cout << "Overlap between rooms " << room1_.id << ' ' << room2_.id << ": " << fxSquared * fySquared
-    //           << ", gradX1: " << gradX1 << ", gradY1: " << gradY1 << "\n";
 }
 
 }  // namespace Callbacks

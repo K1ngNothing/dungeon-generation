@@ -21,8 +21,8 @@ void RoomShaker::operator()(double* x)
                 if (i == j) continue;
                 const Model::Room& room1 = rooms[i];
                 const Model::Room& room2 = rooms[j];
-                const auto [x1, y1] = room1.getVariables(x);
-                const auto [x2, y2] = room2.getVariables(x);
+                const auto [x1, y1] = room1.getVariablesVal(x);
+                const auto [x2, y2] = room2.getVariablesVal(x);
                 const double dx = abs(x1 - x2);
                 const double dy = abs(y1 - y2);
                 const double sumHalfW = (room1.width + room2.width) / 2;

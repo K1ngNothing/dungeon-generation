@@ -1,5 +1,7 @@
 #include "CorridorLength.h"
 
+#include <model/Variables.h>
+
 namespace DungeonGenerator {
 namespace Callbacks {
 
@@ -10,10 +12,12 @@ CorridorLength::CorridorLength(const Model::Door& door1, const Model::Door& door
 
 void CorridorLength::operator()(const double* x, double& f, double* grad) const
 {
-    const auto [x1, y1] = door1_.getVariablesValues(x);
-    const auto [x2, y2] = door2_.getVariablesValues(x);
-    const auto [x1Id, y1Id] = door1_.getVariablesIds();
-    const auto [x2Id, y2Id] = door2_.getVariablesIds();
+    using namespace Model::VarUtils;
+
+    const auto [x1, y1] = door1_.getPosition(x);
+    const auto [x2, y2] = door2_.getPosition(x);
+    const auto [x1Id, y1Id] = getVariablesIds(door1_.parentRoomId);
+    const auto [x2Id, y2Id] = getVariablesIds(door2_.parentRoomId);
 
     const double dx = x1 - x2;
     const double dy = y1 - y2;

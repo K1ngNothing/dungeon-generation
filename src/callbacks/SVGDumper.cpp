@@ -19,7 +19,7 @@ void SVGDumper::operator()(const double* x, int iterNum)
     const Model::Rooms& rooms = model_.getRooms();
     Model::Positions positions(rooms.size());
     for (size_t i = 0; i < rooms.size(); ++i) {
-        const auto [valX, valY] = rooms[i].getVariables(x);
+        const auto [valX, valY] = rooms[i].getVariablesVal(x);
         positions[i] = Model::Position{.x = valX, .y = valY};
     }
     model_.setPositions(positions);

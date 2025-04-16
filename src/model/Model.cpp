@@ -13,6 +13,11 @@ Model::Model(Rooms&& rooms, Corridors&& corridors)
         corridors_(std::move(corridors))
 {}
 
+Room Model::getRoom(size_t id) const
+{
+    return rooms_[id];
+}
+
 const Rooms& Model::getRooms() const
 {
     return rooms_;

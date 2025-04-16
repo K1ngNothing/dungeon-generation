@@ -8,17 +8,10 @@
 namespace DungeonGenerator {
 namespace Model {
 
-Variables Door::getVariablesValues(const double* x) const
+Position Door::getPosition(const double* x) const
 {
-    Variables result = Utils::getVariables(parentRoomId, x);
-    result.varX += dx;
-    result.varY += dy;
-    return result;
-}
-
-VariablesIds Door::getVariablesIds() const
-{
-    return VariablesIds{.xId = parentRoomId * 2, .yId = parentRoomId * 2 + 1};
+    const auto [roomX, roomY] = VarUtils::getVariablesVal(x, parentRoomId);
+    return Position{.x = roomX + dx, .y = roomY + dy};
 }
 
 void Door::dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const
