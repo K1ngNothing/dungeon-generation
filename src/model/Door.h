@@ -1,19 +1,20 @@
 #pragma once
 
+#include <optional>
+
 #include <svgwrite/writer.hpp>
 
 #include "Defs.h"
+#include "Variables.h"
 
 namespace DungeonGenerator {
 namespace Model {
 
-struct Door {
-    // Shifts on each axis relative to parent room center
-    double dx;
-    double dy;
+struct Door : ObjectWithVars {
     size_t parentRoomId;
+    std::optional<Position> shift;  // Shift with regard to parent room's center
 
-    Position getPosition(const double* x) const;
+    Position getPositionFromVars(const double* x) const;
     void dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const;
 };
 

@@ -72,7 +72,7 @@ void runTree()
     // 1. Generate model
     ModelGenerator modelGenerator;
     constexpr size_t roomCount = 50;
-    Model::Model model = modelGenerator.generateTreeDungeon(roomCount);
+    Model::Model model = modelGenerator.generateTreeCenterRooms(roomCount);
     std::cout << "Tree edges:\n";
     for (const Model::Corridor& corridor : model.getCorridors()) {
         size_t v = corridor.door1.parentRoomId;

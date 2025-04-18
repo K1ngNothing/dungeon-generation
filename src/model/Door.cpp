@@ -8,20 +8,24 @@
 namespace DungeonGenerator {
 namespace Model {
 
-Position Door::getPosition(const double* x) const
+Position Door::getPositionFromVars(const double* x) const
 {
     const auto [roomX, roomY] = VarUtils::getVariablesVal(x, parentRoomId);
-    return Position{.x = roomX + dx, .y = roomY + dy};
+    const auto [doorDx, doorDy] = getVariablesVal(x);
+    return Position{.x = roomX + doorDx, .y = roomY + doorDy};
 }
 
 void Door::dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) const
 {
+    assert(shift.has_value() && "Door::dumpToSVG: shift value must be set");
+
     // TODO: remove hard code
     constexpr double width = 2.5;
     constexpr double height = 2.5;
 
-    const double lbPosX = roomPosition.x + dx - width / 2;
-    const double lbPosY = roomPosition.y + dy - height / 2;
+    const auto [doorDx, doorDy] = shift.value();
+    const double lbPosX = roomPosition.x + doorDx - width / 2;
+    const double lbPosY = roomPosition.y + doorDy - height / 2;
     svgWriter.write(SVGUtils::generateSVGRectangle(lbPosX, lbPosY, width, height, "red"));
 }
 

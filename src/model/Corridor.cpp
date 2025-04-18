@@ -12,13 +12,16 @@ void Corridor::dumpToSVG(svgw::writer& svgWriter, const Model::Rooms& rooms) con
     assert(
         rooms[id1].centerPosition.has_value() && rooms[id2].centerPosition.has_value() &&
         "Corridor::dumpToSVG: no position is set");
+    assert(door1.shift.has_value() && door2.shift.has_value() && "Corridor::dumpToSVG: door shifts aren't set");
 
     Position pos1 = rooms[id1].centerPosition.value();
     Position pos2 = rooms[id2].centerPosition.value();
-    pos1.x += door1.dx;
-    pos1.y += door1.dy;
-    pos2.x += door2.dx;
-    pos2.y += door2.dy;
+    const auto [dx1, dy1] = door1.shift.value();
+    const auto [dx2, dy2] = door2.shift.value();
+    pos1.x += dx1;
+    pos1.y += dy1;
+    pos2.x += dx2;
+    pos2.y += dy2;
 
     constexpr double corridorWidth = 0.5;
     svgWriter.line(

@@ -30,7 +30,11 @@ const Corridors& Model::getCorridors() const
 
 size_t Model::getObjectCount() const
 {
-    return rooms_.size();
+    size_t objectCount = rooms_.size();
+    for (const Room& room : rooms_) {
+        objectCount += room.doors.size();
+    }
+    return objectCount;
 }
 
 size_t Model::getVariablesCount() const
@@ -47,6 +51,13 @@ VariablesBounds Model::getVariablesBounds() const
         const auto [roomXId, roomYId] = room.getVariablesIds();
         result[roomXId] = std::nullopt;
         result[roomYId] = std::nullopt;
+        for (const Door& door : room.doors) {
+            // Doors can't go beyond rooms' bounds
+            const auto [doorXId, doorYId] = door.getVariablesIds();
+            const double fraction = 0.3;
+            result[doorXId] = Interval{.lowerBound = -room.width * fraction, .upperBound = room.width * fraction};
+            result[doorYId] = Interval{.lowerBound = -room.height * fraction, .upperBound = room.height * fraction};
+        }
     }
     return result;
 }
@@ -57,6 +68,10 @@ void Model::setPositions(const Positions& positions)
     for (Room& room : rooms_) {
         assert(room.id < positions.size() && "Model::setPositions: invalid room id");
         room.centerPosition = positions[room.id];
+        for (Door& door : room.doors) {
+            assert(door.id < positions.size() && "Model::setPositions: invalid door id");
+            door.shift = positions[door.id];
+        }
     }
 }
 

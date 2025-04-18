@@ -12,16 +12,17 @@ Model::Room createRoomFourDoors(size_t id, double width, double height, Model::P
     const double doorDy = height * 0.4;
 
     Model::Room result;
-    result.id = id;
-    result.width = width;
-    result.height = height;
-    result.doors = {
-        Model::Door{    .dx = 0.0, .dy = -doorDy, .parentRoomId = id},
-        Model::Door{.dx = -doorDx,     .dy = 0.0, .parentRoomId = id},
-        Model::Door{    .dx = 0.0,  .dy = doorDy, .parentRoomId = id},
-        Model::Door{ .dx = doorDx,     .dy = 0.0, .parentRoomId = id},
-    };
-    result.centerPosition = center;
+    // TODO: fix
+    // result.id = id;
+    // result.width = width;
+    // result.height = height;
+    // result.doors = {
+    //     Model::Door{    .dx = 0.0, .dy = -doorDy, .parentRoomId = id},
+    //     Model::Door{.dx = -doorDx,     .dy = 0.0, .parentRoomId = id},
+    //     Model::Door{    .dx = 0.0,  .dy = doorDy, .parentRoomId = id},
+    //     Model::Door{ .dx = doorDx,     .dy = 0.0, .parentRoomId = id},
+    // };
+    // result.centerPosition = center;
     return result;
 }
 
@@ -109,17 +110,37 @@ Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
         rooms[roomId].id = roomId;
         rooms[roomId].width = roomWidth;
         rooms[roomId].height = roomHeight;
-        rooms[roomId].doors = {
-            Model::Door{.dx = 0.0, .dy = 0.0, .parentRoomId = roomId}
-        };
     }
 
-    // 2. Add corridors
-    std::vector<Model::Corridor> corridors;
-    corridors.reserve(roomCount - 1);
+    // 2. Decide what rooms will be connected
+    std::vector<std::vector<size_t>> graph(roomCount);
     for (size_t roomId = 1; roomId < roomCount; ++roomId) {
-        size_t otherRoom = rng_() % roomId;
-        corridors.push_back({rooms[roomId].doors[0], rooms[otherRoom].doors[0]});
+        size_t v = roomId;
+        size_t u = rng_() % roomId;
+        graph[v].push_back(u);
+        graph[u].push_back(v);
+    }
+
+    //  3. Add corridors: for each corridor we create a pair of movable rooms
+    // (!) We must be very careful with door references in Corridors
+    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
+        const size_t doorCount = graph[roomId].size();
+        rooms[roomId].doors.reserve(doorCount);
+    }
+
+    std::vector<Model::Corridor> corridors;
+    size_t freeDoorId = roomCount;
+    corridors.reserve(roomCount - 1);
+    for (size_t room1 = 0; room1 < roomCount; ++room1) {
+        for (size_t room2 : graph[room1]) {
+            assert(room1 != room2 && "Loop in the tree");
+            if (room1 >= room2) {
+                continue;
+            }
+            rooms[room1].doors.push_back(Model::Door{{.id = freeDoorId++}, .parentRoomId = room1});
+            rooms[room2].doors.push_back(Model::Door{{.id = freeDoorId++}, .parentRoomId = room2});
+            corridors.push_back({rooms[room1].doors.back(), rooms[room2].doors.back()});
+        }
     }
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
