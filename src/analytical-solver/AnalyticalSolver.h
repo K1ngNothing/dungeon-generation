@@ -18,8 +18,8 @@ class AnalyticalSolver {
 
 public:
     AnalyticalSolver(
-        size_t roomCnt, std::vector<Callbacks::FGEval>&& costFunctions,
-        std::vector<Callbacks::FGEval>&& equalityConstraints,
+        size_t objectCnt, size_t varCnt, Model::VariablesBounds&& variablesBounds,
+        std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::FGEval>&& equalityConstraints,
         std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
         std::vector<Callbacks::ReaderCallback>&& readerCallbacks);
 
@@ -51,9 +51,10 @@ private:
     friend PetscErrorCode almmConvergenceTest(Tao, void*);
 
     // Task info
-    size_t roomCnt_;
+    size_t objectCnt_;
     size_t varCnt_;
     size_t cEqCnt_;
+    Model::VariablesBounds variablesBounds_;
     std::vector<Callbacks::FGEval> costFunctions_;
     std::vector<Callbacks::FGEval> equalityConstraints_;
     std::vector<Callbacks::ModifierCallback> modifierCallbacks_;

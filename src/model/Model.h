@@ -27,6 +27,10 @@ public:
     const Rooms& getRooms() const;
     const Corridors& getCorridors() const;
 
+    size_t getObjectCount() const;
+    size_t getVariablesCount() const;
+    VariablesBounds getVariablesBounds() const;
+
     void setPositions(const Positions& roomPositions);
 
     // Very rough SVG dumper. It maybe will be removed in favor of SFML.

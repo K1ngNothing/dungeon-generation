@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
+#include <vector>
 
 namespace DungeonGenerator {
 namespace Model {
@@ -15,8 +17,13 @@ struct Variables {
     double varY;
 };
 
-namespace VarUtils {
+struct Interval {
+    double lowerBound;
+    double upperBound;
+};
+using VariablesBounds = std::vector<std::optional<Interval>>;
 
+namespace VarUtils {
 VariablesIds getVariablesIds(size_t id);
 Variables getVariablesVal(const double* x, size_t id);
 

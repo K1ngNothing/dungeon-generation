@@ -45,8 +45,8 @@ void runSolver(Model::Model& model)
 
     // 2. Create and run a analytical solver
     AnalyticalSolver::AnalyticalSolver solver(
-        rooms.size(), std::move(costFunctions), std::move(penaltyFunctions), std::move(modifierCallbacks),
-        std::move(readerCallbacks));
+        model.getObjectCount(), model.getVariablesCount(), model.getVariablesBounds(), std::move(costFunctions),
+        std::move(penaltyFunctions), std::move(modifierCallbacks), std::move(readerCallbacks));
     solver.solve();
     Model::Positions solution = solver.retrieveSolution();
     model.setPositions(solution);

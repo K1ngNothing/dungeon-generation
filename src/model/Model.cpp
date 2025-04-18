@@ -28,12 +28,35 @@ const Corridors& Model::getCorridors() const
     return corridors_;
 }
 
-void Model::setPositions(const Positions& roomPositions)
+size_t Model::getObjectCount() const
 {
-    assert(roomPositions.size() == rooms_.size() && "Model::setPositions: invalid positions");
-    for (size_t i = 0; i < rooms_.size(); ++i) {
-        assert(rooms_[i].id < roomPositions.size() && "Model::setPositions: invalid positions");
-        rooms_[i].centerPosition = roomPositions[rooms_[i].id];
+    return rooms_.size();
+}
+
+size_t Model::getVariablesCount() const
+{
+    return getObjectCount() * 2;
+}
+
+VariablesBounds Model::getVariablesBounds() const
+{
+    size_t varCount = getVariablesCount();
+    VariablesBounds result(varCount);
+    for (const Room& room : rooms_) {
+        // Rooms don't have bounds
+        const auto [roomXId, roomYId] = room.getVariablesIds();
+        result[roomXId] = std::nullopt;
+        result[roomYId] = std::nullopt;
+    }
+    return result;
+}
+
+void Model::setPositions(const Positions& positions)
+{
+    assert(positions.size() == getObjectCount() && "Model::setPositions: invalid positions count");
+    for (Room& room : rooms_) {
+        assert(room.id < positions.size() && "Model::setPositions: invalid room id");
+        room.centerPosition = positions[room.id];
     }
 }
 

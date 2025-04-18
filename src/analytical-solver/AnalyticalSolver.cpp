@@ -7,12 +7,14 @@ namespace DungeonGenerator {
 namespace AnalyticalSolver {
 
 AnalyticalSolver::AnalyticalSolver(
-    size_t roomCnt, std::vector<Callbacks::FGEval>&& costFunctions,
-    std::vector<Callbacks::FGEval>&& equalityConstraints, std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
+    size_t objectCnt, size_t varCnt, Model::VariablesBounds&& variablesBounds,
+    std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::FGEval>&& equalityConstraints,
+    std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
     std::vector<Callbacks::ReaderCallback>&& readerCallbacks)
-      : roomCnt_(roomCnt),
-        varCnt_(roomCnt * 2),
+      : objectCnt_(objectCnt),
+        varCnt_(varCnt),
         cEqCnt_(equalityConstraints.size()),
+        variablesBounds_(std::move(variablesBounds)),
         JEqCache_(cEqCnt_, std::vector<double>(varCnt_)),
         costFunctions_(std::move(costFunctions)),
         equalityConstraints_(std::move(equalityConstraints)),
@@ -62,10 +64,11 @@ Model::Positions AnalyticalSolver::retrieveSolution() const
     if (VecGetArrayRead(x_, &xArr) != PETSC_SUCCESS) {
         return {};
     }
-    Model::Positions solution(roomCnt_);
-    for (size_t i = 0; i < roomCnt_; ++i) {
-        solution[i].x = xArr[i * 2];
-        solution[i].y = xArr[i * 2 + 1];
+    Model::Positions solution(objectCnt_);
+    for (size_t objId = 0; objId < objectCnt_; ++objId) {
+        const auto [xId, yId] = Model::VarUtils::getVariablesIds(objId);
+        solution[objId].x = xArr[xId];
+        solution[objId].y = xArr[yId];
     }
     static_cast<void>(VecRestoreArrayRead(x_, &xArr));
     return solution;
@@ -116,9 +119,28 @@ PetscErrorCode AnalyticalSolver::initializeTAOContainers()
     // be disabled, and therefore solver will find the solution where most of the corridors are exactly zero.
     PetscCall(VecSet(x_, 0));
 
-    // Tell TAO that there's no variable bounds
-    PetscCall(VecSet(xLowerBound_, PETSC_NINFINITY));
-    PetscCall(VecSet(xUpperBound_, PETSC_INFINITY));
+    // Set variables bounds
+    double* xLowerBoundArr;
+    double* xUpperBoundArr;
+    PetscCall(VecGetArray(xLowerBound_, &xLowerBoundArr));
+    PetscCall(VecGetArray(xUpperBound_, &xUpperBoundArr));
+
+    auto setBounds = [xLowerBoundArr, xUpperBoundArr, this](size_t varId) {
+        if (variablesBounds_[varId].has_value()) {
+            xLowerBoundArr[varId] = variablesBounds_[varId]->lowerBound;
+            xUpperBoundArr[varId] = variablesBounds_[varId]->upperBound;
+        } else {
+            xLowerBoundArr[varId] = PETSC_NINFINITY;
+            xUpperBoundArr[varId] = PETSC_INFINITY;
+        }
+    };
+    for (size_t objId = 0; objId < objectCnt_; ++objId) {
+        const auto [xId, yId] = Model::VarUtils::getVariablesIds(objId);
+        setBounds(xId);
+        setBounds(yId);
+    }
+    PetscCall(VecRestoreArray(xLowerBound_, &xLowerBoundArr));
+    PetscCall(VecRestoreArray(xUpperBound_, &xUpperBoundArr));
 
     PetscFunctionReturn(PETSC_SUCCESS);
 }
