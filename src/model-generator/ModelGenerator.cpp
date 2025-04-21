@@ -26,6 +26,42 @@ Model::Room createRoomFourDoors(size_t id, double width, double height, Model::P
     return result;
 }
 
+bool isTree(const ModelGenerator::Graph& graph)
+{
+    const size_t n = graph.size();
+    if (n == 0) {
+        return true;
+    }
+
+    // Check edge count
+    size_t edgeCount = 0;
+    for (size_t v = 0; v < n; ++v) {
+        edgeCount += graph[v].size();
+    }
+    edgeCount /= 2;  // Each edge is counted twice
+    if (edgeCount != n - 1) {
+        return false;
+    }
+
+    // Check connectivity
+    std::vector<bool> visited(n);
+    std::function<void(size_t)> dfs = [&graph, &visited, &dfs](size_t v) {
+        visited[v] = true;
+        for (const size_t u : graph[v]) {
+            if (!visited[u]) {
+                dfs(u);
+            }
+        }
+    };
+    dfs(0);
+    for (size_t v = 0; v < n; ++v) {
+        if (!visited[v]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 }  // namespace
 
 Model::Model ModelGenerator::generateDungeon(size_t roomCount) const
@@ -113,13 +149,7 @@ Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
     }
 
     // 2. Decide what rooms will be connected
-    std::vector<std::vector<size_t>> graph(roomCount);
-    for (size_t roomId = 1; roomId < roomCount; ++roomId) {
-        size_t v = roomId;
-        size_t u = rng_() % roomId;
-        graph[v].push_back(u);
-        graph[u].push_back(v);
-    }
+    std::vector<std::vector<size_t>> graph = generateTree(roomCount);
 
     //  3. Add corridors: for each corridor we create a pair of movable rooms
     // (!) We must be very careful with door references in Corridors
@@ -191,6 +221,66 @@ Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
         }
     }
     return Model::Model{std::move(rooms), std::move(corridors)};
+}
+
+ModelGenerator::Graph ModelGenerator::generateTree(size_t vertexCount)
+{
+    switch (kTreeGenerationStrategy) {
+        case TreeGenerationStrategy::RandomPredecessors:
+            return generateTreePredecessorStrategy(vertexCount);
+        case TreeGenerationStrategy::RandomChildCount:
+            return generateTreeChildCountStrategy(vertexCount);
+        default:
+            assert(false && "Unknown tree generation strategy");
+            return Graph();
+    }
+}
+
+ModelGenerator::Graph ModelGenerator::generateTreePredecessorStrategy(size_t vertexCount)
+{
+    std::vector<std::vector<size_t>> graph(vertexCount);
+    for (size_t v = 1; v < vertexCount; ++v) {
+        const size_t u = rng_() % v;
+        graph[v].push_back(u);
+        graph[u].push_back(v);
+    }
+    assert(isTree(graph) && "Resulting graph isn't a tree :(");
+    return graph;
+}
+
+ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vertexCount)
+{
+    constexpr size_t maxNeighborsCount = 4;
+
+    std::vector<std::vector<size_t>> graph(vertexCount);
+    if (vertexCount == 1) {
+        // Just to be safe
+        return graph;
+    }
+
+    size_t disconnectedVertex = 1;
+    for (size_t v = 0; v < vertexCount; ++v) {
+        assert(disconnectedVertex > v && "Current vertex isn't connected to the graph");
+        assert(disconnectedVertex <= vertexCount && "disconnectedVertex is too big");
+
+        size_t maxChildrenCount = (v == 0 ? maxNeighborsCount : maxNeighborsCount - 1);
+        maxChildrenCount = std::min(maxChildrenCount, vertexCount - disconnectedVertex);
+        assert(disconnectedVertex + maxChildrenCount <= vertexCount && "Too many children nodes");
+
+        size_t childrenCount = rng_() % (maxChildrenCount + 1);  // [0; maxChildrenCount]
+        if (childrenCount == 0 && v + 1 != vertexCount && disconnectedVertex == v + 1) {
+            // The next vertex won't be connected => the whole graph will be disconnected
+            childrenCount = 1;
+        }
+        for (size_t childNum = 0; childNum < childrenCount; ++childNum) {
+            assert(disconnectedVertex < vertexCount && "Invalid graph edge");
+            graph[v].push_back(disconnectedVertex);
+            graph[disconnectedVertex].push_back(v);
+            disconnectedVertex++;
+        }
+    }
+    assert(isTree(graph) && "Resulting graph isn't a tree :(");
+    return graph;
 }
 
 }  // namespace DungeonGenerator
