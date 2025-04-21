@@ -12,7 +12,7 @@ TEST(CallbacksTests, OverlapValueTest)
     constexpr double tolerance = 1e-9;
     Model::Room room1{0, 10, 20, {}, std::nullopt};
     Model::Room room2{1, 20, 10, {}, std::nullopt};
-    Callbacks::RoomOverlap overlap(room1, room2);
+    Callbacks::RoomOverlap overlap(room1, room2, 1.0);
     std::vector<double> xVec;
     double val = 0.0;
 
