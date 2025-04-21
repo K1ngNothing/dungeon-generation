@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <random>
-
 #include <callbacks/RoomOverlap.h>
+#include <random/Random.h>
 
 #include "Common.h"
 
@@ -48,14 +47,12 @@ TEST(CallbacksTests, OverlapGradientTest)
     Model::Room room2{1, 20, 20, {}, std::nullopt};
     Callbacks::RoomOverlap overlap(room1, room2);
 
-    std::uniform_real_distribution<double> varDistribution(-17, 17);  // To have a chance of no intersection
-    std::mt19937 rng(42);
-
     constexpr size_t iterCount = 10000;
+    Random::RNG rng(42);
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
         for (size_t i = 2; i < 4; ++i) {  // Second room has random position
-            x[i] = varDistribution(rng);
+            x[i] = Random::uniformRangeContinuous(-17.0, 17.0, rng);
         }
         checkGradientCorrectness(overlap, x);
     }

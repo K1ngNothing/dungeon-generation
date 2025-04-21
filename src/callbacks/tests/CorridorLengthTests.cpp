@@ -1,9 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <random>
-
 #include <callbacks/CorridorLength.h>
 #include <model/Room.h>
+#include <random/Random.h>
 
 #include "Common.h"
 
@@ -17,14 +16,12 @@ TEST(CallbacksTests, CorridorLengthGradientTest)
     Model::Door door2{0, 20, 1};
     Callbacks::CorridorLength corridorLength(door1, door2);
 
-    std::uniform_real_distribution<double> varDistribution(-50, 50);
-    std::mt19937 rng(42);
-
     constexpr size_t iterCount = 10000;
+    Random::RNG rng(42);
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
         for (size_t i = 2; i < 4; ++i) {  // Second room has random position
-            x[i] = varDistribution(rng);
+            x[i] = Random::uniformRangeContinuous(-50.0, 50.0, rng);
         }
         checkGradientCorrectness(corridorLength, x);
     }

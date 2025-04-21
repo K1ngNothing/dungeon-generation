@@ -1,8 +1,7 @@
 #pragma once
 
-#include <random>
-
 #include <model/Model.h>
+#include <random/Random.h>
 
 namespace DungeonGenerator {
 namespace Callbacks {
@@ -13,12 +12,8 @@ public:
     void operator()(double* x);
 
 private:
-    double generateUniform(double lb, double rb);
-
     const Model::Model& model_;
-
-    static constexpr size_t kSeed = 42;
-    std::mt19937 rng_ = std::mt19937(kSeed);  // random number generator
+    Random::RNG rng_ = Random::RNG(Random::kGlobalSeed);  // random number generator
 };
 
 }  // namespace Callbacks

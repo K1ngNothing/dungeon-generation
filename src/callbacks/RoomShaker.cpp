@@ -29,8 +29,10 @@ void RoomShaker::operator()(double* x)
                 const double sumHalfH = (room1.height + room2.height) / 2;
                 if (dx < sumHalfW * 0.001 && dy < sumHalfH * 0.001) {
                     // Rooms are stacked right on top of each other => gradient is almost zero
-                    const double shiftX = generateUniform(-room1.width * 0.01, room1.width * 0.01);
-                    const double shiftY = generateUniform(-room1.height * 0.01, room1.height * 0.01);
+                    const double xBound = room1.width * 0.01;
+                    const double yBound = room1.height * 0.01;
+                    const double shiftX = Random::uniformRangeContinuous(-xBound, xBound, rng_);
+                    const double shiftY = Random::uniformRangeContinuous(-yBound, yBound, rng_);
                     const auto [xId1, yId1] = room1.getVariablesIds();
                     x[xId1] += shiftX;
                     x[yId1] += shiftY;
@@ -43,12 +45,6 @@ void RoomShaker::operator()(double* x)
             }
         }
     } while (roomsMoved);
-}
-
-double RoomShaker::generateUniform(double lb, double rb)
-{
-    std::uniform_real_distribution<double> uniform(lb, rb);
-    return uniform(rng_);
 }
 
 }  // namespace Callbacks

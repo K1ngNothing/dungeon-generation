@@ -4,6 +4,7 @@ add_subdirectory(analytical-solver)
 add_subdirectory(callbacks)
 add_subdirectory(model)
 add_subdirectory(model-generator)
+add_subdirectory(random)
 
 project(dungeon-generator)
 add_executable(${PROJECT_NAME}

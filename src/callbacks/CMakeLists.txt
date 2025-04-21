@@ -23,6 +23,7 @@ target_sources(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         model
+        random
 )
 
 add_subdirectory(tests)
