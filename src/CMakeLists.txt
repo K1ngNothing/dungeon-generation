@@ -6,17 +6,17 @@ add_subdirectory(model)
 add_subdirectory(model-generator)
 add_subdirectory(random)
 
-project(dungeon-generator)
+project(dungeon_generator)
 add_executable(${PROJECT_NAME}
     main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        analytical-solver
+        analytical_solver
         callbacks
         model
-        model-generator
+        model_generator
 )
 
 target_compile_options(${PROJECT_NAME}

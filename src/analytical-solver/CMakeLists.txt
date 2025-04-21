@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(analytical-solver)
+project(analytical_solver)
 
 add_library(${PROJECT_NAME} STATIC
     AnalyticalSolver.cpp
@@ -9,7 +9,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_sources(${PROJECT_NAME} PUBLIC
-    FILE_SET "analytical_solver_HEADERS"
+    FILE_SET "${PROJECT_NAME}_HEADERS"
     TYPE HEADERS
     BASE_DIRS
         "."

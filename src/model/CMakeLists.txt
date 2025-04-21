@@ -32,6 +32,6 @@ find_package(svgwrite REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        analytical-solver
+        analytical_solver
         svgwrite::svgwrite
 )
