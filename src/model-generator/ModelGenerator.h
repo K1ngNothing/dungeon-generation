@@ -1,8 +1,7 @@
 #pragma once
 
-#include <random>
-
 #include <model/Model.h>
+#include <random/Random.h>
 
 namespace DungeonGenerator {
 
@@ -33,7 +32,7 @@ private:
     Graph generateTreePredecessorStrategy(size_t vertexCount);
     Graph generateTreeChildCountStrategy(size_t vertexCount);
 
-    std::mt19937 rng_ = std::mt19937(kSeed);  // random number generator
+    Random::RNG rng_ = Random::RNG(Random::kGlobalSeed);  // random number generator
 };
 
 }  // namespace DungeonGenerator

@@ -142,7 +142,7 @@ Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
     // 1. Create rooms and doors
     Model::Rooms rooms(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
         rooms[roomId].id = roomId;
         rooms[roomId].width = roomWidth;
         rooms[roomId].height = roomHeight;
@@ -187,7 +187,7 @@ Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
     Model::Rooms rooms;
     rooms.reserve(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
         rooms.emplace_back(createRoomFourDoors(roomId, roomWidth, roomHeight));
     }
 
@@ -197,7 +197,7 @@ Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
     for (size_t roomId = 1; roomId < roomCount; ++roomId) {
         bool connectionAdded = false;
         while (!connectionAdded) {
-            size_t otherRoom = rng_() % roomId;
+            size_t otherRoom = Random::uniformDiscrete(roomId - 1, rng_);
 
             // Find possible connections between chosen rooms
             std::vector<size_t> possibleConnections;
@@ -212,7 +212,7 @@ Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
             if (possibleConnections.empty()) {
                 continue;
             }
-            size_t side = possibleConnections[rng_() % possibleConnections.size()];
+            size_t side = possibleConnections[Random::uniformDiscrete(possibleConnections.size() - 1, rng_)];
             size_t otherSide = (side + 2) % 4;
             corridors.push_back({rooms[roomId].doors[side], rooms[otherRoom].doors[otherSide]});
             availableDoors[roomId][side] = false;
@@ -240,7 +240,7 @@ ModelGenerator::Graph ModelGenerator::generateTreePredecessorStrategy(size_t ver
 {
     std::vector<std::vector<size_t>> graph(vertexCount);
     for (size_t v = 1; v < vertexCount; ++v) {
-        const size_t u = rng_() % v;
+        const size_t u = Random::uniformDiscrete(v - 1, rng_);
         graph[v].push_back(u);
         graph[u].push_back(v);
     }
@@ -267,7 +267,7 @@ ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vert
         maxChildrenCount = std::min(maxChildrenCount, vertexCount - disconnectedVertex);
         assert(disconnectedVertex + maxChildrenCount <= vertexCount && "Too many children nodes");
 
-        size_t childrenCount = rng_() % (maxChildrenCount + 1);  // [0; maxChildrenCount]
+        size_t childrenCount = Random::uniformDiscrete(maxChildrenCount, rng_);
         if (childrenCount == 0 && v + 1 != vertexCount && disconnectedVertex == v + 1) {
             // The next vertex won't be connected => the whole graph will be disconnected
             childrenCount = 1;
