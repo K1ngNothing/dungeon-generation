@@ -2,7 +2,7 @@
 
 #include <model/Model.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 class PushForce {
@@ -27,4 +27,4 @@ private:
 };
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

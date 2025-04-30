@@ -2,7 +2,7 @@
 
 #include <model/Room.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 class RoomOverlap {
@@ -19,4 +19,4 @@ private:
 };
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

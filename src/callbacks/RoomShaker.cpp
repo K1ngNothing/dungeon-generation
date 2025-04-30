@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 RoomShaker::RoomShaker(const Model::Model& model)
@@ -48,4 +48,4 @@ void RoomShaker::operator()(double* x)
 }
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

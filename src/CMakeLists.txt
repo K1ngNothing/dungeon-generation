@@ -2,26 +2,19 @@ cmake_minimum_required(VERSION 3.23)
 
 add_subdirectory(analytical-solver)
 add_subdirectory(callbacks)
+add_subdirectory(dungeon-generator)
 add_subdirectory(model)
 add_subdirectory(model-generator)
 add_subdirectory(random)
 
-project(dungeon_generator)
+project(run_dungeon_generator)
 add_executable(${PROJECT_NAME}
     main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        analytical_solver
-        callbacks
-        model
-        model_generator
-)
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE
-        -DPATH_TO_SVG="${CMAKE_BINARY_DIR}"
+    PUBLIC
+        dungeon_generator
 )
 
 include(FetchContent)

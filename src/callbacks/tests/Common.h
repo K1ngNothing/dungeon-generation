@@ -2,7 +2,7 @@
 
 #include <callbacks/Defs.h>
 
-using namespace DungeonGenerator;
+using namespace DungeonGeneration;
 
 inline void checkGradientCorrectness(Callbacks::FGEval func, std::vector<double> x)
 {

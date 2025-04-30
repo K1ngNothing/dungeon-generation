@@ -9,7 +9,7 @@
 
 #include "TAOCallbacks.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace AnalyticalSolver {
 
 class AnalyticalSolver {
@@ -83,4 +83,4 @@ private:
 };
 
 }  // namespace AnalyticalSolver
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

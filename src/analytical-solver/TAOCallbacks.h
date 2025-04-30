@@ -2,7 +2,7 @@
 
 #include <petsctao.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace AnalyticalSolver {
 
 PetscErrorCode evaluateCostFunctionGradient(Tao almmSolver, Vec xVec, double* f, Vec gVec, void* ctx);
@@ -14,4 +14,4 @@ PetscErrorCode monitorALMM(Tao almmSolver, void* ctx);
 PetscErrorCode monitorSubsolver(Tao subsolver, void* ctx);
 
 }  // namespace AnalyticalSolver
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 SVGDumper::SVGDumper(Model::Model& model, const std::filesystem::path& pathToSVG, const std::string& filenamePrefix)
@@ -29,4 +29,4 @@ void SVGDumper::operator()(const double* x, int iterNum)
 }
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

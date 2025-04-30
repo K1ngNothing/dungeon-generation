@@ -7,7 +7,7 @@
 #include "Door.h"
 #include "Room.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct Corridor {
@@ -19,4 +19,4 @@ struct Corridor {
 using Corridors = std::vector<Corridor>;
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

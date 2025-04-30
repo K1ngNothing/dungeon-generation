@@ -7,7 +7,7 @@
 #include "Defs.h"
 #include "Variables.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct Door : ObjectWithVars {
@@ -19,4 +19,4 @@ struct Door : ObjectWithVars {
 };
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

@@ -5,7 +5,7 @@
 #include "Room.h"
 #include "SVGUtils.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 Position Door::getPositionFromVars(const double* x) const
@@ -30,4 +30,4 @@ void Door::dumpToSVG(svgw::writer& svgWriter, Model::Position roomPosition) cons
 }
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

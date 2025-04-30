@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct Position {
@@ -12,4 +12,4 @@ struct Position {
 using Positions = std::vector<Position>;
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

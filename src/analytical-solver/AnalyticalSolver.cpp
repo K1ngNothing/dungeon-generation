@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace AnalyticalSolver {
 
 AnalyticalSolver::AnalyticalSolver(
@@ -240,4 +240,4 @@ std::vector<double> AnalyticalSolver::provideJEqCache() const
 }
 
 }  // namespace AnalyticalSolver
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

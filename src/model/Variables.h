@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct VariablesIds {
@@ -37,4 +37,4 @@ struct ObjectWithVars {
 };
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

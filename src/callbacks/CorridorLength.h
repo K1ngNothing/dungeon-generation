@@ -2,7 +2,7 @@
 
 #include <model/Door.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 class CorridorLength {
@@ -16,4 +16,4 @@ private:
 };
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

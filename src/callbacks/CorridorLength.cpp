@@ -2,7 +2,7 @@
 
 #include <model/Variables.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 CorridorLength::CorridorLength(const Model::Door& door1, const Model::Door& door2)
@@ -52,4 +52,4 @@ void CorridorLength::operator()(const double* x, double& f, double* grad) const
 }
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

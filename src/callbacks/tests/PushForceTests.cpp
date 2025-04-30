@@ -6,7 +6,7 @@
 
 #include "Common.h"
 
-using namespace DungeonGenerator;
+using namespace DungeonGeneration;
 
 TEST(CallbacksTests, PushForceValueTest)
 {

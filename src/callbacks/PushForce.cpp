@@ -5,7 +5,7 @@
 
 constexpr bool kPushOnlyDisconnected = true;
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 PushForce::PushForce(const Model::Model& model, double scale, double range)
@@ -100,4 +100,4 @@ void PushForce::calculatePush(RoomPair rooms, const double* x, double& f, double
 }
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

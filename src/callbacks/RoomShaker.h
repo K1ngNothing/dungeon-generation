@@ -3,7 +3,7 @@
 #include <model/Model.h>
 #include <random/Random.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 class RoomShaker {
@@ -17,4 +17,4 @@ private:
 };
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

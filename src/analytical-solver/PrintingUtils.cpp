@@ -2,7 +2,7 @@
 
 #include <iomanip>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace AnalyticalSolver {
 namespace PrintingUtils {
 
@@ -58,4 +58,4 @@ std::string matrixToString(const double* matrix, const size_t rows, const size_t
 
 }  // namespace PrintingUtils
 }  // namespace AnalyticalSolver
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Callbacks {
 
 RoomOverlap::RoomOverlap(const Model::Room& room1, const Model::Room& room2, double roomBloating)
@@ -68,4 +68,4 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
 }
 
 }  // namespace Callbacks
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

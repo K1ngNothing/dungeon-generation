@@ -3,7 +3,7 @@
 #include <model/Model.h>
 #include <random/Random.h>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 
 // A rough draft of model generator class, which is responsible for generating rooms and connections between them.
 // TODO: add more configuration options
@@ -16,17 +16,13 @@ class ModelGenerator {
 public:
     using Graph = std::vector<std::vector<size_t>>;
 
-    // Main generating function. Not yet implemented.
-    Model::Model generateDungeon(size_t roomCount) const;
-
-    // Generation functions with predefined structure. Used in tests.
+    // Generation functions with predefined structure.
     Model::Model generateGrid(size_t gridSide) const;
-    Model::Model generateTreeCenterRooms(size_t roomCount);
-    Model::Model generateTreeDungeon(size_t roomCount);
+    Model::Model generateTreeMovableDoors(size_t roomCount);
+    Model::Model generateTreeFixedDoors(size_t roomCount);
 
 private:
     static constexpr TreeGenerationStrategy kTreeGenerationStrategy = TreeGenerationStrategy::RandomChildCount;
-    static constexpr size_t kSeed = 42;
 
     Graph generateTree(size_t vertexCount);
     Graph generateTreePredecessorStrategy(size_t vertexCount);
@@ -35,4 +31,4 @@ private:
     Random::RNG rng_ = Random::RNG(Random::kGlobalSeed);  // random number generator
 };
 
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

@@ -7,7 +7,7 @@
 #include "PrintingUtils.h"
 #include "TAOPrivate.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace AnalyticalSolver {
 
 namespace {
@@ -282,4 +282,4 @@ PetscErrorCode monitorSubsolver(Tao subsolver, void* ctx)
 }
 
 }  // namespace AnalyticalSolver
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

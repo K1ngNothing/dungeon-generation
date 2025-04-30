@@ -5,7 +5,7 @@
 
 #include <svgwrite/writer.hpp>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 Model::Model(Rooms&& rooms, Corridors&& corridors)
@@ -138,4 +138,4 @@ std::array<double, 4> Model::calculateViewBox() const
 }
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

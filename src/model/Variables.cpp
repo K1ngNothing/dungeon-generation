@@ -1,6 +1,6 @@
 #include "Variables.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 namespace VarUtils {
@@ -29,4 +29,4 @@ Variables ObjectWithVars::getVariablesVal(const double* x) const
 }
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

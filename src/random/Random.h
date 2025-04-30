@@ -3,7 +3,7 @@
 #include <cassert>
 #include <random>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Random {
 
 using RNG = std::mt19937;
@@ -32,4 +32,4 @@ T uniformRangeContinuous(T lb, T rb, RNG& rng)
 }
 
 }  // namespace Random
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

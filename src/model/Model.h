@@ -7,7 +7,7 @@
 #include "Corridor.h"
 #include "Room.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct Model {
@@ -44,4 +44,4 @@ private:
 };
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 
 namespace {
 
@@ -64,12 +64,6 @@ bool isTree(const ModelGenerator::Graph& graph)
 
 }  // namespace
 
-Model::Model ModelGenerator::generateDungeon(size_t roomCount) const
-{
-    // TODO: implement
-    throw std::runtime_error("ModelGenerator::generateDungeon is not implemented yet");
-}
-
 /*
 Generates dungeon with this structure with fixed grid side (example's for gidSide = 2):
 ┌───┐ ┌───┐
@@ -129,7 +123,7 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
 
 /// Generates a dungeon based on random tree. For simplicity's sake we set each door
 /// to be in the center of the room (which automatically avoids a need for rotations).
-Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
+Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
 {
     assert(roomCount > 0);
     std::vector<std::pair<int, int>> roomsDimensions{
@@ -175,7 +169,7 @@ Model::Model ModelGenerator::generateTreeCenterRooms(size_t roomCount)
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-Model::Model ModelGenerator::generateTreeDungeon(size_t roomCount)
+Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
 {
     assert(roomCount > 0);
     std::vector<std::pair<int, int>> roomsDimensions{
@@ -283,4 +277,4 @@ ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vert
     return graph;
 }
 
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

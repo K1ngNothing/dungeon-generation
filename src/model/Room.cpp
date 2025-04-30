@@ -4,7 +4,7 @@
 
 #include "SVGUtils.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 std::optional<Position> Room::getLBPosition() const
@@ -32,4 +32,4 @@ void Room::dumpToSVG(svgw::writer& svgWriter) const
 }
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

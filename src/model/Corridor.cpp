@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 void Corridor::dumpToSVG(svgw::writer& svgWriter, const Model::Rooms& rooms) const
@@ -33,4 +33,4 @@ void Corridor::dumpToSVG(svgw::writer& svgWriter, const Model::Rooms& rooms) con
 }
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

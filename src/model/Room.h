@@ -9,7 +9,7 @@
 #include "Door.h"
 #include "Variables.h"
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 
 struct Door;
@@ -27,4 +27,4 @@ struct Room : ObjectWithVars {
 using Rooms = std::vector<Room>;
 
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration

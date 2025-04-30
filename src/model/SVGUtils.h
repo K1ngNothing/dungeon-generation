@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace DungeonGenerator {
+namespace DungeonGeneration {
 namespace Model {
 namespace SVGUtils {
 
@@ -13,4 +13,4 @@ std::string generateSVGRectangle(
 
 }  // namespace SVGUtils
 }  // namespace Model
-}  // namespace DungeonGenerator
+}  // namespace DungeonGeneration
