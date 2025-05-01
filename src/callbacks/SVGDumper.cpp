@@ -13,6 +13,8 @@ SVGDumper::SVGDumper(Model::Model& model, const std::filesystem::path& pathToSVG
 
 void SVGDumper::operator()(const double* x, int iterNum)
 {
+    assert(x && "SVGDumper::operator(): Null variables array");
+
     // Note that we DO change model_ in here by resetting stored rooms' positions.
     // Idea is, that these positions don't mean anything while solver runs, and are resetted at the solving end.
 

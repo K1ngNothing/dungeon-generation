@@ -29,11 +29,28 @@ Variables getVariablesVal(const double* x, size_t id);
 
 }  // namespace VarUtils
 
-struct ObjectWithVars {
-    size_t id;
+class ObjectWithVars {
+public:
+    ObjectWithVars() = default;
+    explicit ObjectWithVars(size_t id);
 
     VariablesIds getVariablesIds() const;
     Variables getVariablesVal(const double* x) const;
+
+protected:
+    size_t varObjId_;
+};
+
+struct ObjectMaybeWithVars {
+public:
+    explicit ObjectMaybeWithVars(std::optional<size_t> id = std::nullopt);
+
+    bool hasVariables() const;
+    VariablesIds getVariablesIds() const;
+    Variables getVariablesVal(const double* x) const;
+
+protected:
+    std::optional<size_t> varObjId_;
 };
 
 }  // namespace Model

@@ -10,7 +10,7 @@
 namespace DungeonGeneration {
 namespace Model {
 
-struct Model {
+class Model {
 public:
     Model() = default;
     Model(Rooms&& rooms, Corridors&& corridors);
@@ -23,10 +23,10 @@ public:
     Model(const Model& other) = delete;
     Model& operator=(const Model& other) = delete;
 
-    Room getRoom(size_t id) const;
-    const Rooms& getRooms() const;
-    const Corridors& getCorridors() const;
+    const Rooms& rooms() const;
+    const Corridors& corridors() const;
 
+    Room getRoom(size_t id) const;
     size_t getObjectCount() const;
     size_t getVariablesCount() const;
     VariablesBounds getVariablesBounds() const;

@@ -22,7 +22,7 @@ void PushForce::operator()(const double* x, double& f, double* grad) const
             calculatePush(rooms, x, f, grad);
         }
     } else {
-        size_t roomCount = model_.getRooms().size();
+        size_t roomCount = model_.rooms().size();
         for (size_t i = 0; i < roomCount; ++i) {
             for (size_t j = i + 1; j < roomCount; ++j) {
                 calculatePush(RoomPair{i, j}, x, f, grad);
@@ -35,11 +35,11 @@ PushForce::RoomPairs PushForce::findDisconnectedRooms(const Model::Model& model)
 {
     RoomPairs disconnectedRooms;
 
-    size_t n = model_.getRooms().size();
+    size_t n = model_.rooms().size();
     std::vector<std::vector<bool>> areConnected(n, std::vector<bool>(n, false));
-    for (const Model::Corridor& corridor : model_.getCorridors()) {
-        size_t room1 = corridor.door1.parentRoomId;
-        size_t room2 = corridor.door2.parentRoomId;
+    for (const Model::Corridor& corridor : model_.corridors()) {
+        size_t room1 = corridor.door1.parentRoomId();
+        size_t room2 = corridor.door2.parentRoomId();
         areConnected[room1][room2] = true;
         areConnected[room2][room1] = true;
     }
@@ -56,7 +56,7 @@ PushForce::RoomPairs PushForce::findDisconnectedRooms(const Model::Model& model)
 
 void PushForce::calculatePush(RoomPair rooms, const double* x, double& f, double* grad) const
 {
-    const Model::Rooms allRooms = model_.getRooms();
+    const Model::Rooms allRooms = model_.rooms();
     assert(rooms.roomId1 < allRooms.size() && "Invalid room1Id");
     assert(rooms.roomId2 < allRooms.size() && "Invalid room2Id");
     const Model::Room& room1 = allRooms[rooms.roomId1];
@@ -69,8 +69,8 @@ void PushForce::calculatePush(RoomPair rooms, const double* x, double& f, double
 
     const double dx = x1 - x2;
     const double dy = y1 - y2;
-    const double sumHW = (room1.width + room2.width) / 2;
-    const double sumHH = (room1.height + room2.height) / 2;
+    const double sumHW = (room1.width() + room2.width()) / 2;
+    const double sumHH = (room1.height() + room2.height()) / 2;
 
     /*
     xRatio = dx / (range * sumHW)

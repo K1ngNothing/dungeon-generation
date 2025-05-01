@@ -35,6 +35,8 @@ Model::Model DungeonGenerator::generateModel() const
             model.dumpToSVG(kPathToSVG / "grid_input.svg");
             return model;
         }
+        case DungeonType::TreeCenterDoors:
+            return modelGenerator.generateTreeCenterDoors(kRoomCount);
         case DungeonType::TreeFixedDoors:
             return modelGenerator.generateTreeFixedDoors(kRoomCount);
         case DungeonType::TreeMovableDoors:
@@ -49,7 +51,7 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
 {
     // Cost functions
     std::vector<Callbacks::FGEval> costFunctions;
-    for (const auto& [door1, door2] : model.getCorridors()) {
+    for (const auto& [door1, door2] : model.corridors()) {
         costFunctions.push_back(Callbacks::CorridorLength(door1, door2));
     }
     if (kEnablePushForce) {
@@ -60,7 +62,7 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
 
     // Penalty functions
     std::vector<Callbacks::FGEval> penaltyFunctions;
-    const Model::Rooms& rooms = model.getRooms();
+    const Model::Rooms& rooms = model.rooms();
     for (size_t i = 0; i < rooms.size(); ++i) {
         for (size_t j = i + 1; j < rooms.size(); ++j) {
             penaltyFunctions.push_back(Callbacks::RoomOverlap(rooms[i], rooms[j]));

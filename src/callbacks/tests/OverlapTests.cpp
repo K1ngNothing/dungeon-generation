@@ -10,8 +10,8 @@ using namespace DungeonGeneration;
 TEST(CallbacksTests, OverlapValueTest)
 {
     constexpr double tolerance = 1e-9;
-    Model::Room room1{0, 10, 20, {}, std::nullopt};
-    Model::Room room2{1, 20, 10, {}, std::nullopt};
+    Model::Room room1(0, 10, 20, {});
+    Model::Room room2(1, 20, 10, {});
     Callbacks::RoomOverlap overlap(room1, room2, 1.0);
     std::vector<double> xVec;
     double val = 0.0;
@@ -43,15 +43,15 @@ TEST(CallbacksTests, OverlapValueTest)
 
 TEST(CallbacksTests, OverlapGradientTest)
 {
-    Model::Room room1{0, 10, 10, {}, std::nullopt};
-    Model::Room room2{1, 20, 20, {}, std::nullopt};
+    Model::Room room1(0, 10, 10, {});
+    Model::Room room2(1, 20, 20, {});
     Callbacks::RoomOverlap overlap(room1, room2);
 
     constexpr size_t iterCount = 10000;
     Random::RNG rng(42);
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
-        for (size_t i = 2; i < 4; ++i) {  // Second room has random position
+        for (size_t i = 2; i < 4; ++i) {  // Second room has a random position
             x[i] = Random::uniformRangeContinuous(-17.0, 17.0, rng);
         }
         checkGradientCorrectness(overlap, x);

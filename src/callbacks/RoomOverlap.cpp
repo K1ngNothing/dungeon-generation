@@ -11,11 +11,7 @@ RoomOverlap::RoomOverlap(const Model::Room& room1, const Model::Room& room2, dou
         room1_(room1),
         room2_(room2)
 {
-    assert(room1.id != room2.id && "Don't create overlap function for one room");
-    for (const Model::Room& room : {room1, room2}) {
-        assert(room.width > 0.0 && "Bad room width");
-        assert(room.height > 0.0 && "Bad room height");
-    }
+    assert(room1.id() != room2.id() && "Don't create overlap function for one room");
 }
 
 void RoomOverlap::operator()(const double* x, double& f, double* grad) const
@@ -27,8 +23,8 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
 
     const double dx = x1 - x2;
     const double dy = y1 - y2;
-    double sumHalfWidth = (room1_.width + room2_.width) / 2;
-    double sumHalfHeight = (room1_.height + room2_.height) / 2;
+    double sumHalfWidth = (room1_.width() + room2_.width()) / 2;
+    double sumHalfHeight = (room1_.height() + room2_.height()) / 2;
     sumHalfHeight *= roomBloating_;
     sumHalfWidth *= roomBloating_;
     if (std::abs(dx) >= sumHalfWidth || std::abs(dy) >= sumHalfHeight) {

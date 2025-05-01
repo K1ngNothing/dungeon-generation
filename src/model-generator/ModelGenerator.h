@@ -5,8 +5,7 @@
 
 namespace DungeonGeneration {
 
-// A rough draft of model generator class, which is responsible for generating rooms and connections between them.
-// TODO: add more configuration options
+// A class for generating model, i.e. rooms and connections between them.
 class ModelGenerator {
     enum class TreeGenerationStrategy {
         RandomPredecessors,  // For each vertex connet it with random predecessor
@@ -18,8 +17,9 @@ public:
 
     // Generation functions with predefined structure.
     Model::Model generateGrid(size_t gridSide) const;
-    Model::Model generateTreeMovableDoors(size_t roomCount);
+    Model::Model generateTreeCenterDoors(size_t roomCount);
     Model::Model generateTreeFixedDoors(size_t roomCount);
+    Model::Model generateTreeMovableDoors(size_t roomCount);
 
 private:
     static constexpr TreeGenerationStrategy kTreeGenerationStrategy = TreeGenerationStrategy::RandomChildCount;

@@ -5,25 +5,30 @@
 namespace DungeonGeneration {
 
 namespace {
-
-Model::Room createRoomFourDoors(size_t id, double width, double height, Model::Position center = {0, 0})
+/*
+Create a room with doors placed this way
+    2
+  ┌─┴─┐
+1─┤   ├─3
+  └─┬─┘
+    0
+*/
+Model::Room createRoomFourFixedDoors(
+    size_t roomId, double width, double height, Model::Position centerPosition = {0, 0})
 {
+    using namespace Model;
+
     const double doorDx = width * 0.4;
     const double doorDy = height * 0.4;
 
-    Model::Room result;
-    // TODO: fix
-    // result.id = id;
-    // result.width = width;
-    // result.height = height;
-    // result.doors = {
-    //     Model::Door{    .dx = 0.0, .dy = -doorDy, .parentRoomId = id},
-    //     Model::Door{.dx = -doorDx,     .dy = 0.0, .parentRoomId = id},
-    //     Model::Door{    .dx = 0.0,  .dy = doorDy, .parentRoomId = id},
-    //     Model::Door{ .dx = doorDx,     .dy = 0.0, .parentRoomId = id},
-    // };
-    // result.centerPosition = center;
-    return result;
+    std::vector<Door> doors{
+        Door::createFixedDoor(roomId, Position{.x = 0.0, .y = -doorDy}),
+        Door::createFixedDoor(roomId, Position{.x = -doorDx, .y = 0.0}),
+        Door::createFixedDoor(roomId, Position{.x = 0.0, .y = doorDy}),
+        Door::createFixedDoor(roomId, Position{.x = doorDx, .y = 0.0}),
+    };
+
+    return Room(roomId, width, height, std::move(doors), centerPosition);
 }
 
 bool isTree(const ModelGenerator::Graph& graph)
@@ -92,39 +97,41 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
     };
 
     // 1. Create rooms and doors
+    const size_t roomCount = gridSide * gridSide;
     Model::Rooms rooms;
-    rooms.reserve(gridSide * gridSide);
+    rooms.reserve(roomCount);
     for (size_t row = 0; row < gridSide; ++row) {
         for (size_t col = 0; col < gridSide; ++col) {
             const size_t roomId = getRoomId(row, col);
-            const Model::Position center{
+            const Model::Position centerPosition{
                 .x = col * (roomWidth + roomDistX), .y = (gridSide - row - 1) * (roomHeight + roomDistY)};
-            rooms.emplace_back(createRoomFourDoors(roomId, roomWidth, roomHeight, center));
+            rooms.emplace_back(createRoomFourFixedDoors(roomId, roomWidth, roomHeight, centerPosition));
         }
     }
 
     // 2. Add corridors
     std::vector<Model::Corridor> corridors;
+    corridors.reserve(roomCount);
     for (size_t row = 0; row < gridSide; ++row) {
         for (size_t col = 0; col < gridSide; ++col) {
             size_t curRoom = getRoomId(row, col);
             if (row < gridSide - 1) {
                 size_t roomDown = getRoomId(row + 1, col);
-                corridors.push_back({rooms[curRoom].doors[0], rooms[roomDown].doors[2]});
+                corridors.push_back({rooms[curRoom].doorsMutable()[0], rooms[roomDown].doorsMutable()[2]});
             }
             if (col < gridSide - 1) {
                 size_t roomRight = getRoomId(row, col + 1);
-                corridors.push_back({rooms[curRoom].doors[3], rooms[roomRight].doors[1]});
+                corridors.push_back({rooms[curRoom].doorsMutable()[3], rooms[roomRight].doorsMutable()[1]});
             }
         }
     }
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-/// Generates a dungeon based on random tree. For simplicity's sake we set each door
-/// to be in the center of the room (which automatically avoids a need for rotations).
-Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
+/// Generates a dungeon with random tree structure with doors in the center of the rooms.
+Model::Model ModelGenerator::generateTreeCenterDoors(size_t roomCount)
 {
+    assert(roomCount > 0);
     assert(roomCount > 0);
     std::vector<std::pair<int, int>> roomsDimensions{
         {20, 20},
@@ -136,39 +143,23 @@ Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
     // 1. Create rooms and doors
     Model::Rooms rooms(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
-        rooms[roomId].id = roomId;
-        rooms[roomId].width = roomWidth;
-        rooms[roomId].height = roomHeight;
+        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        std::vector<Model::Door> doors{Model::Door::createFixedDoor(roomId, Model::Position{.x = 0.0, .y = 0.0})};
+        rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, std::move(doors));
     }
 
-    // 2. Decide what rooms will be connected
-    std::vector<std::vector<size_t>> graph = generateTree(roomCount);
-
-    //  3. Add corridors: for each corridor we create a pair of movable rooms
-    // (!) We must be very careful with door references in Corridors
-    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const size_t doorCount = graph[roomId].size();
-        rooms[roomId].doors.reserve(doorCount);
-    }
-
+    // 2. Add corridors
     std::vector<Model::Corridor> corridors;
-    size_t freeDoorId = roomCount;
     corridors.reserve(roomCount - 1);
-    for (size_t room1 = 0; room1 < roomCount; ++room1) {
-        for (size_t room2 : graph[room1]) {
-            assert(room1 != room2 && "Loop in the tree");
-            if (room1 >= room2) {
-                continue;
-            }
-            rooms[room1].doors.push_back(Model::Door{{.id = freeDoorId++}, .parentRoomId = room1});
-            rooms[room2].doors.push_back(Model::Door{{.id = freeDoorId++}, .parentRoomId = room2});
-            corridors.push_back({rooms[room1].doors.back(), rooms[room2].doors.back()});
-        }
+    for (size_t roomId = 1; roomId < roomCount; ++roomId) {
+        size_t otherRoom = rng_() % roomId;
+        corridors.push_back({rooms[roomId].doorsMutable()[0], rooms[otherRoom].doorsMutable()[0]});
     }
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
+/// Generates a dungeon with random tree structure with four fixed doors on each room's side.
+/// Rooms are only connected East-West or North-South so that solution is at least feasible.
 Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
 {
     assert(roomCount > 0);
@@ -182,7 +173,7 @@ Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
     rooms.reserve(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
         const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
-        rooms.emplace_back(createRoomFourDoors(roomId, roomWidth, roomHeight));
+        rooms.emplace_back(createRoomFourFixedDoors(roomId, roomWidth, roomHeight));
     }
 
     // Algorithm: choose random room with id < roomId and connect them East-West or North-South
@@ -208,10 +199,57 @@ Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
             }
             size_t side = possibleConnections[Random::uniformDiscrete(possibleConnections.size() - 1, rng_)];
             size_t otherSide = (side + 2) % 4;
-            corridors.push_back({rooms[roomId].doors[side], rooms[otherRoom].doors[otherSide]});
+            corridors.push_back({rooms[roomId].doorsMutable()[side], rooms[otherRoom].doorsMutable()[otherSide]});
             availableDoors[roomId][side] = false;
             availableDoors[otherRoom][otherSide] = false;
             connectionAdded = true;
+        }
+    }
+    return Model::Model{std::move(rooms), std::move(corridors)};
+}
+
+/// Generates a dungeon with random tree structure with movable doors. Each edge just adds a pair of movable doors.
+Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
+{
+    assert(roomCount > 0);
+    std::vector<std::pair<int, int>> roomsDimensions{
+        {20, 20},
+        {20, 40},
+        {40, 20},
+        {30, 30}
+    };
+
+    // 1. Create rooms and doors
+    Model::Rooms rooms(roomCount);
+    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
+        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
+        rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, {});
+    }
+
+    // 2. Decide what rooms will be connected
+    std::vector<std::vector<size_t>> graph = generateTree(roomCount);
+
+    //  3. Add corridors: for each corridor we create a pair of movable rooms
+    // (!) We must be very careful with door references in Corridors
+    for (size_t roomId = 0; roomId < roomCount; ++roomId) {
+        const size_t doorCount = graph[roomId].size();
+        rooms[roomId].doorsMutable().reserve(doorCount);
+    }
+
+    std::vector<Model::Corridor> corridors;
+    size_t freeDoorId = roomCount;
+    corridors.reserve(roomCount - 1);
+    for (size_t room1 = 0; room1 < roomCount; ++room1) {
+        for (size_t room2 : graph[room1]) {
+            assert(room1 != room2 && "Loop in the tree");
+            if (room1 >= room2) {
+                continue;
+            }
+            std::vector<Model::Door>& doors1 = rooms[room1].doorsMutable();
+            std::vector<Model::Door>& doors2 = rooms[room2].doorsMutable();
+            doors1.push_back(Model::Door::createMovableDoor(room1, freeDoorId++));
+            doors2.push_back(Model::Door::createMovableDoor(room2, freeDoorId++));
+            corridors.push_back({doors1.back(), doors2.back()});
         }
     }
     return Model::Model{std::move(rooms), std::move(corridors)};

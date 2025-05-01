@@ -11,8 +11,8 @@ using namespace DungeonGeneration;
 TEST(CallbacksTests, PushForceValueTest)
 {
     constexpr double tolerance = 1e-9;
-    Model::Room room1{0, 10, 10, {}, std::nullopt};
-    Model::Room room2{1, 20, 20, {}, std::nullopt};
+    Model::Room room1(0, 10, 10, {});
+    Model::Room room2(1, 20, 20, {});
     Model::Rooms rooms = {room1, room2};
     Model::Model model(std::move(rooms), {});
     Callbacks::PushForce pushForce(model);
@@ -39,8 +39,8 @@ TEST(CallbacksTests, PushForceValueTest)
 
 TEST(CallbacksTests, PushForceGradientTest)
 {
-    Model::Room room1{0, 10, 10, {}, std::nullopt};
-    Model::Room room2{1, 20, 20, {}, std::nullopt};
+    Model::Room room1(0, 10, 10, {});
+    Model::Room room2(1, 20, 20, {});
     Model::Rooms rooms = {room1, room2};
     Model::Model model(std::move(rooms), {});
     Callbacks::PushForce pushForce(model);
@@ -51,7 +51,7 @@ TEST(CallbacksTests, PushForceGradientTest)
     constexpr size_t iterCount = 1000;
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
-        for (size_t i = 2; i < 4; ++i) {  // Second room has random position
+        for (size_t i = 2; i < 4; ++i) {  // Second room has a random position
             x[i] = varDistribution(rng);
         }
         checkGradientCorrectness(pushForce, x);
