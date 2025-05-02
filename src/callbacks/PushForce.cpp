@@ -54,7 +54,7 @@ PushForce::RoomPairs PushForce::findDisconnectedRooms(const Model::Model& model)
 
 void PushForce::calculatePush(RoomPair rooms, const double* x, double& f, double* grad) const
 {
-    const Model::Rooms allRooms = model_.rooms();
+    const Model::Rooms& allRooms = model_.rooms();
     assert(rooms.roomId1 < allRooms.size() && "Invalid room1Id");
     assert(rooms.roomId2 < allRooms.size() && "Invalid room2Id");
     const Model::Room& room1 = allRooms[rooms.roomId1];
