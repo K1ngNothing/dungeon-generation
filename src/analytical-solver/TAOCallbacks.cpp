@@ -54,7 +54,7 @@ PetscErrorCode evaluateCostFunctionGradient(Tao almmSolver, Vec xVec, double* f,
     PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PetscErrorCode evaluateEqualityConstraintFunction(Tao almmSolver, Vec xVec, Vec cEqVec, void* ctx)
+PetscErrorCode evaluateEqualityConstraintsFunction(Tao almmSolver, Vec xVec, Vec cEqVec, void* ctx)
 {
     PetscFunctionBegin;
 
@@ -74,10 +74,22 @@ PetscErrorCode evaluateEqualityConstraintFunction(Tao almmSolver, Vec xVec, Vec 
     }
 #endif
 
-    AnalyticalSolver::Matrix& JEqCache = solver->provideZeroedJEqCache();
+    // Calculate both constraints values and Jacobian
+    std::vector<double> JEqArr(cEqCnt * varCnt);
     for (size_t fcnId = 0; fcnId < cEqCnt; ++fcnId) {
-        solver->equalityConstraints_[fcnId](xArr, cEqArr[fcnId], JEqCache[fcnId].data());
+        double* cEqGradArr = &JEqArr[fcnId * varCnt];  // This is where relevant JEq row starts
+        solver->equalityConstraints_[fcnId](xArr, cEqArr[fcnId], cEqGradArr);
     }
+
+    // Set Jacobian values
+    Mat JEq = solver->JEq_;
+    const PetscInt* rowIndexes = solver->JEqRowIndexes_.data();
+    const PetscInt* colIndexes = solver->JEqColIndexes_.data();
+    assert(rowIndexes && "Null row indicies");
+    assert(colIndexes && "Null col indicies");
+    PetscCall(MatSetValues(JEq, cEqCnt, rowIndexes, varCnt, colIndexes, JEqArr.data(), INSERT_VALUES));
+    PetscCall(MatAssemblyBegin(JEq, MAT_FINAL_ASSEMBLY));
+    PetscCall(MatAssemblyEnd(JEq, MAT_FINAL_ASSEMBLY));
 
     PetscCall(VecRestoreArrayRead(xVec, &xArr));
     PetscCall(VecRestoreArray(cEqVec, &cEqArr));
@@ -85,23 +97,11 @@ PetscErrorCode evaluateEqualityConstraintFunction(Tao almmSolver, Vec xVec, Vec 
     PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-PetscErrorCode evaluateEqualityConstraintJacobian(Tao almmSolver, Vec xVec, Mat JEq, Mat JEqPre, void* ctx)
+PetscErrorCode evaluateEqualityConstraintsJacobian(Tao almmSolver, Vec xVec, Mat JEq, Mat JEqPre, void* ctx)
 {
     PetscFunctionBegin;
 
-    AnalyticalSolver* solver = reinterpret_cast<AnalyticalSolver*>(ctx);
-    const size_t varCnt = solver->varCnt_;
-    const size_t cEqCnt = solver->cEqCnt_;
-
-    // TODO: maybe remain inside PETSc objects to avoid copying?
-    const std::vector<double> JEqValue = solver->provideJEqCache();
-    std::vector<PetscInt> rowIndexes(cEqCnt);
-    std::vector<PetscInt> colIndexes(varCnt);
-    std::iota(rowIndexes.begin(), rowIndexes.end(), 0);
-    std::iota(colIndexes.begin(), colIndexes.end(), 0);
-    PetscCall(MatSetValues(JEq, cEqCnt, rowIndexes.data(), varCnt, colIndexes.data(), JEqValue.data(), INSERT_VALUES));
-    PetscCall(MatAssemblyBegin(JEq, MAT_FINAL_ASSEMBLY));
-    PetscCall(MatAssemblyEnd(JEq, MAT_FINAL_ASSEMBLY));
+    // We just do nothing. JEq was already calculated in evaluateEqualityConstraintsFunction.
 
     PetscFunctionReturn(PETSC_SUCCESS);
 }
@@ -128,7 +128,7 @@ PetscErrorCode almmConvergenceTest(Tao almmSolver, void* ctx)
     if (iterNum >= maxIterCount) {
         reason = TAO_DIVERGED_MAXITS;
     } else if (LGradNorm < gatol && cnorm < catol) {
-        // TODO: seems weird to check LGradNorm here -- shouldn't BQNLS only stop when gradient norm is < gatol?
+        // It seems weird to check LGradNorm here -- shouldn't BQNLS only stop when gradient norm is < gatol?
         // But for some reason in TAO implementation they force gatol = catol, so it seems to be important.
         reason = TAO_CONVERGED_GATOL;
     }
@@ -223,11 +223,17 @@ PetscErrorCode monitorALMM(Tao almmSolver, void* ctx)
     if (cEqCnt != 0 && cEqCnt <= ARRAY_PRINT_LIMIT) {
         const double* cEq;
         PetscCall(VecGetArrayRead(solver->cEq_, &cEq));
-        const std::vector<double>& JEqCache = solver->provideJEqCache();
+
+        const PetscInt* rowIndexes = solver->JEqRowIndexes_.data();
+        const PetscInt* colIndexes = solver->JEqColIndexes_.data();
+        assert(rowIndexes && "Null row indicies");
+        assert(colIndexes && "Null col indicies");
+        std::vector<double> JEqVal(cEqCnt * varCnt);
+        PetscCall(MatGetValues(solver->JEq_, cEqCnt, rowIndexes, varCnt, colIndexes, JEqVal.data()));
 
         const std::string JEqPadding = "                      ";
         std::cerr << padding << "cEq: " << arrayToString(cEq, solver->cEqCnt_) << "\n";
-        std::cerr << padding << "JEq: " << matrixToString(JEqCache.data(), cEqCnt, varCnt, JEqPadding) << "\n";
+        std::cerr << padding << "JEq: " << matrixToString(JEqVal.data(), cEqCnt, varCnt, JEqPadding) << "\n";
 
         PetscCall(VecRestoreArrayRead(solver->cEq_, &cEq));
     }

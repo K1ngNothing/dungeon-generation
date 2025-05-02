@@ -3,8 +3,6 @@
 #include <cassert>
 #include <cstdlib>
 
-constexpr bool kPushOnlyDisconnected = true;
-
 namespace DungeonGeneration {
 namespace Callbacks {
 

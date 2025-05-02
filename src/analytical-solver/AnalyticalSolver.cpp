@@ -1,7 +1,9 @@
 #include "AnalyticalSolver.h"
 
 #include <cassert>
+#include <chrono>
 #include <iostream>
+#include <numeric>
 
 namespace DungeonGeneration {
 namespace AnalyticalSolver {
@@ -15,11 +17,12 @@ AnalyticalSolver::AnalyticalSolver(
         varCnt_(varCnt),
         cEqCnt_(equalityConstraints.size()),
         variablesBounds_(std::move(variablesBounds)),
-        JEqCache_(cEqCnt_, std::vector<double>(varCnt_)),
         costFunctions_(std::move(costFunctions)),
         equalityConstraints_(std::move(equalityConstraints)),
         modifierCallbacks_(std::move(modifierCallbacks)),
-        readerCallbacks_(std::move(readerCallbacks))
+        readerCallbacks_(std::move(readerCallbacks)),
+        JEqRowIndexes_(cEqCnt_),
+        JEqColIndexes_(varCnt)
 {
     if (PetscInitializeNoArguments() != PETSC_SUCCESS) {
         throw std::runtime_error("AnalyticalSolver:: failed to initialize PETSc");
@@ -36,6 +39,12 @@ AnalyticalSolver::AnalyticalSolver(
     if (setScaryOptionsInTAOSolvers() != PETSC_SUCCESS) {
         throw std::runtime_error("AnalyticalSolver: failed to set scary options for TAO solvers");
     }
+
+    // Setup containers used for updating JEq
+    std::iota(JEqRowIndexes_.begin(), JEqRowIndexes_.end(), 0);
+    std::iota(JEqColIndexes_.begin(), JEqColIndexes_.end(), 0);
+    assert(JEqRowIndexes_.size() == cEqCnt_ && "Incorrect row indexes count");
+    assert(JEqColIndexes_.size() == varCnt_ && "Incorrect col indexes count");
 }
 
 AnalyticalSolver::~AnalyticalSolver()
@@ -46,6 +55,8 @@ AnalyticalSolver::~AnalyticalSolver()
 void AnalyticalSolver::solve()
 {
     std::cerr << "AnalyticalSolver: start solving...\n";
+    const auto beginTimestamp = std::chrono::steady_clock::now();
+
     if (TaoSolve(almmSolver_) != PETSC_SUCCESS) {
         throw std::runtime_error("AnalyticalSolver: error in TaoSolve for ALMM solver");
     }
@@ -54,7 +65,10 @@ void AnalyticalSolver::solve()
         // TODO: do better
         throw std::runtime_error("AnalyticalSolver: failed to retrieve converged reason");
     }
-    std::cerr << "AnalyticalSolver: finished solving!\n"
+
+    const auto endTimestamp = std::chrono::steady_clock::now();
+    const double solvingDuration = std::chrono::duration<double>(endTimestamp - beginTimestamp).count();
+    std::cerr << "AnalyticalSolver: finished solving in " << solvingDuration << " seconds!\n"
               << "Converged reason: " << TaoConvergedReasons[convergedReason] << "\n";
 }
 
@@ -112,8 +126,9 @@ PetscErrorCode AnalyticalSolver::initializeTAOContainers()
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &xUpperBound_));
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &costGradient_));
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, cEqCnt_, &cEq_));
-    // TODO: why dense? This matrix for the most part should be sparse d.t. BFGS rank two update.
+    // TODO: should this matrix be dense?
     PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, cEqCnt_, varCnt_, nullptr, &JEq_));
+    // PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, cEqCnt_, varCnt_, varCnt_, nullptr, &JEq_));
 
     // Set initial solution to zero. The exact value doesn't matter, because at the first iteration constraints will
     // be disabled, and therefore solver will find the solution where most of the corridors are exactly zero.
@@ -153,8 +168,8 @@ PetscErrorCode AnalyticalSolver::setContainersAndRoutines()
     PetscCall(TaoSetVariableBounds(almmSolver_, xLowerBound_, xUpperBound_));
 
     PetscCall(TaoSetObjectiveAndGradient(almmSolver_, costGradient_, evaluateCostFunctionGradient, this));
-    PetscCall(TaoSetEqualityConstraintsRoutine(almmSolver_, cEq_, evaluateEqualityConstraintFunction, this));
-    PetscCall(TaoSetJacobianEqualityRoutine(almmSolver_, JEq_, JEq_, evaluateEqualityConstraintJacobian, this));
+    PetscCall(TaoSetEqualityConstraintsRoutine(almmSolver_, cEq_, evaluateEqualityConstraintsFunction, this));
+    PetscCall(TaoSetJacobianEqualityRoutine(almmSolver_, JEq_, JEq_, evaluateEqualityConstraintsJacobian, this));
     PetscCall(TaoSetConvergenceTest(almmSolver_, almmConvergenceTest, this));
 
     PetscCall(TaoMonitorSet(almmSolver_, monitorALMM, this, nullptr));
@@ -212,31 +227,6 @@ PetscErrorCode AnalyticalSolver::runCallbacks(int iterNum)
     PetscCall(VecRestoreArray(x_, &xArr));
 
     PetscFunctionReturn(PETSC_SUCCESS);
-}
-
-AnalyticalSolver::Matrix& AnalyticalSolver::provideZeroedJEqCache()
-{
-    assert(
-        JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_) &&
-        "Wrong JEqCache_ dimensions");
-    for (size_t i = 0; i < cEqCnt_; ++i) {
-        JEqCache_[i].assign(varCnt_, 0);
-    }
-    return JEqCache_;
-}
-
-std::vector<double> AnalyticalSolver::provideJEqCache() const
-{
-    assert(
-        JEqCache_.size() == cEqCnt_ && (cEqCnt_ == 0 || JEqCache_[0].size() == varCnt_) &&
-        "Wrong JEqCache_ dimensions");
-    std::vector<double> result(cEqCnt_ * varCnt_);
-    for (size_t i = 0; i < cEqCnt_; ++i) {
-        for (size_t j = 0; j < varCnt_; ++j) {
-            result[i * varCnt_ + j] = JEqCache_[i][j];
-        }
-    }
-    return result;
 }
 
 }  // namespace AnalyticalSolver
