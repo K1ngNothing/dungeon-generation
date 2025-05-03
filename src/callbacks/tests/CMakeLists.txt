@@ -12,7 +12,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     GTest::gtest_main
     callbacks
-    random
+    utils
 )
 
 enable_testing()

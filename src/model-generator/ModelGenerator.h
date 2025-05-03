@@ -1,7 +1,7 @@
 #pragma once
 
 #include <model/Model.h>
-#include <random/Random.h>
+#include <utils/Random.h>
 
 namespace DungeonGeneration {
 

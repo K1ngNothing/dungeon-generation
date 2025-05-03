@@ -5,6 +5,8 @@
 #include <iostream>
 #include <numeric>
 
+#include <utils/CLArguments.h>
+
 namespace DungeonGeneration {
 namespace AnalyticalSolver {
 
@@ -24,7 +26,7 @@ AnalyticalSolver::AnalyticalSolver(
         JEqRowIndexes_(cEqCnt_),
         JEqColIndexes_(varCnt)
 {
-    if (PetscInitializeNoArguments() != PETSC_SUCCESS) {
+    if (initializePETSc() != PETSC_SUCCESS) {
         throw std::runtime_error("AnalyticalSolver:: failed to initialize PETSc");
     }
     if (initializeTAOSolvers() != PETSC_SUCCESS) {
@@ -50,6 +52,7 @@ AnalyticalSolver::AnalyticalSolver(
 AnalyticalSolver::~AnalyticalSolver()
 {
     destroyTAOObjects();
+    static_cast<void>(PetscFinalize());
 }
 
 void AnalyticalSolver::solve()
@@ -86,6 +89,21 @@ Model::Positions AnalyticalSolver::retrieveSolution() const
     }
     static_cast<void>(VecRestoreArrayRead(x_, &xArr));
     return solution;
+}
+
+PetscErrorCode AnalyticalSolver::initializePETSc()
+{
+    PetscFunctionBegin;
+
+    std::optional<CLUtils::CLArguments> clArgs = CLUtils::provideCLArgumentsHandler().provideArguments();
+    if (clArgs.has_value()) {
+        auto [argc, argv] = clArgs.value();
+        PetscCall(PetscInitialize(&argc, &argv, nullptr, nullptr));
+    } else {
+        PetscCall(PetscInitializeNoArguments());
+    }
+
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
 PetscErrorCode AnalyticalSolver::initializeTAOSolvers()

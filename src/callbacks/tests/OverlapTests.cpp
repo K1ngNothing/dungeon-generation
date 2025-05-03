@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <callbacks/RoomOverlap.h>
-#include <random/Random.h>
+#include <utils/Random.h>
 
 #include "Common.h"
 

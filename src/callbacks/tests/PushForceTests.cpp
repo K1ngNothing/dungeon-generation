@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <random>
-
 #include <callbacks/PushForce.h>
+#include <utils/Random.h>
 
 #include "Common.h"
 
@@ -45,14 +44,12 @@ TEST(CallbacksTests, PushForceGradientTest)
     Model::Model model(std::move(rooms), {});
     Callbacks::PushForce pushForce(model);
 
-    std::uniform_real_distribution<double> varDistribution(-50, 50);
-    std::mt19937 rng(42);
-
     constexpr size_t iterCount = 1000;
+    Random::RNG rng(42);
     for (size_t it = 0; it < iterCount; ++it) {
         std::vector<double> x(4, 0.0);    // First room is always in (0, 0)
         for (size_t i = 2; i < 4; ++i) {  // Second room has a random position
-            x[i] = varDistribution(rng);
+            x[i] = Random::uniformRangeContinuous(-50.0, 50.0, rng);
         }
         checkGradientCorrectness(pushForce, x);
     }

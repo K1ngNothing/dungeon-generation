@@ -27,6 +27,7 @@ public:
     Model::Positions retrieveSolution() const;
 
 private:
+    PetscErrorCode initializePETSc();
     PetscErrorCode initializeTAOSolvers();
     PetscErrorCode initializeTAOContainers();
     PetscErrorCode setContainersAndRoutines();

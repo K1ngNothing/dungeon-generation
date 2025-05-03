@@ -2,7 +2,7 @@
 
 #include <callbacks/CorridorLength.h>
 #include <model/Room.h>
-#include <random/Random.h>
+#include <utils/Random.h>
 
 #include "Common.h"
 
