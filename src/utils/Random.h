@@ -31,5 +31,13 @@ T uniformRangeContinuous(T lb, T rb, RNG& rng)
     return distribution(rng);
 }
 
+inline size_t fromDistribution(const std::vector<double>& weights, RNG& rng)
+{
+    std::discrete_distribution<size_t> generator(weights.begin(), weights.end());
+    size_t result = generator(rng);
+    assert(result < weights.size() && "Invalid generation");
+    return result;
+}
+
 }  // namespace Random
 }  // namespace DungeonGeneration

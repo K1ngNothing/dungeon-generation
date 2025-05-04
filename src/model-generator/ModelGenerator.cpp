@@ -132,18 +132,11 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
 Model::Model ModelGenerator::generateTreeCenterDoors(size_t roomCount)
 {
     assert(roomCount > 0);
-    assert(roomCount > 0);
-    std::vector<std::pair<int, int>> roomsDimensions{
-        {20, 20},
-        {20, 40},
-        {40, 20},
-        {30, 30}
-    };
 
     // 1. Create rooms and doors
     Model::Rooms rooms(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[rng_() % roomsDimensions.size()];
+        const auto [roomWidth, roomHeight] = generateRoom(roomId);
         std::vector<Model::Door> doors{Model::Door::createFixedDoor(roomId, Model::Position{.x = 0.0, .y = 0.0})};
         rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, std::move(doors));
     }
@@ -163,16 +156,10 @@ Model::Model ModelGenerator::generateTreeCenterDoors(size_t roomCount)
 Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
 {
     assert(roomCount > 0);
-    std::vector<std::pair<int, int>> roomsDimensions{
-        {20, 20},
- // {20, 40},
-  // {40, 20},
-  // {30, 30}
-    };
     Model::Rooms rooms;
     rooms.reserve(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
+        const auto [roomWidth, roomHeight] = generateRoom(roomId);
         rooms.emplace_back(createRoomFourFixedDoors(roomId, roomWidth, roomHeight));
     }
 
@@ -212,17 +199,11 @@ Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
 Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
 {
     assert(roomCount > 0);
-    std::vector<std::pair<int, int>> roomsDimensions{
-        {20, 20},
-        {20, 40},
-        {40, 20},
-        {30, 30}
-    };
 
     // 1. Create rooms and doors
     Model::Rooms rooms(roomCount);
     for (size_t roomId = 0; roomId < roomCount; ++roomId) {
-        const auto [roomWidth, roomHeight] = roomsDimensions[Random::uniformDiscrete(roomsDimensions.size() - 1, rng_)];
+        const auto [roomWidth, roomHeight] = generateRoom(roomId);
         rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, {});
     }
 
@@ -295,11 +276,15 @@ ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vert
         assert(disconnectedVertex > v && "Current vertex isn't connected to the graph");
         assert(disconnectedVertex <= vertexCount && "disconnectedVertex is too big");
 
-        size_t maxChildrenCount = (v == 0 ? maxNeighborsCount : maxNeighborsCount - 1);
+        size_t maxChildrenCount = maxNeighborsCount - 1;
+        if (v == 0) {
+            maxChildrenCount = (kEnableHubRoom ? kHubNeighborsCount : maxNeighborsCount);
+        }
         maxChildrenCount = std::min(maxChildrenCount, vertexCount - disconnectedVertex);
         assert(disconnectedVertex + maxChildrenCount <= vertexCount && "Too many children nodes");
 
-        size_t childrenCount = Random::uniformDiscrete(maxChildrenCount, rng_);
+        // Room 0 always has the maximum allowed room count
+        size_t childrenCount = (v == 0 ? maxChildrenCount : Random::uniformDiscrete(maxChildrenCount, rng_));
         if (childrenCount == 0 && v + 1 != vertexCount && disconnectedVertex == v + 1) {
             // The next vertex won't be connected => the whole graph will be disconnected
             childrenCount = 1;
@@ -313,6 +298,29 @@ ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vert
     }
     assert(isTree(graph) && "Resulting graph isn't a tree :(");
     return graph;
+}
+
+ModelGenerator::RoomDimensions ModelGenerator::generateRoom(size_t roomId)
+{
+    if (kUniformRooms) {
+        return kRegularRoomTypes[0].dimensions;
+    }
+    if (roomId == 0 && kEnableHubRoom) {
+        return generateRoomFromDistribution(kHubRoomTypes);
+    }
+    return generateRoomFromDistribution(kRegularRoomTypes);
+}
+
+ModelGenerator::RoomDimensions ModelGenerator::generateRoomFromDistribution(const std::vector<RoomType>& roomTypes)
+{
+    // TODO: be careful about constant weights copying. For now it's fine because we don't have a lot of room types.
+    const size_t n = roomTypes.size();
+    std::vector<double> weights(n);
+    for (size_t i = 0; i < n; ++i) {
+        weights[i] = roomTypes[i].distributionWeight;
+    }
+    const size_t generatedRoom = Random::fromDistribution(weights, rng_);
+    return roomTypes[generatedRoom].dimensions;
 }
 
 }  // namespace DungeonGeneration

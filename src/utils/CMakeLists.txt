@@ -11,3 +11,5 @@ target_sources(${PROJECT_NAME} PUBLIC
     FILES
         "../utils/Random.h"
 )
+
+add_subdirectory(tests)
