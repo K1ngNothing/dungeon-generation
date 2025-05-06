@@ -11,7 +11,7 @@ SVGDumper::SVGDumper(Model::Model& model, const std::filesystem::path& pathToSVG
         filenamePrefix_(filenamePrefix)
 {}
 
-void SVGDumper::operator()(const double* x, int iterNum)
+void SVGDumper::operator()(const double* x, int runNum, int iterNum)
 {
     assert(x && "SVGDumper::operator(): Null variables array");
 
@@ -27,7 +27,8 @@ void SVGDumper::operator()(const double* x, int iterNum)
         positions[objId].y = x[yId];
     }
     model_.setPositions(positions);
-    model_.dumpToSVG(pathToSVG_ / (filenamePrefix_ + "_" + std::to_string(iterNum) + ".svg"));
+    const std::string filename = filenamePrefix_ + "_" + std::to_string(runNum) + "_" + std::to_string(iterNum);
+    model_.dumpToSVG(pathToSVG_ / (filename + ".svg"));
 }
 
 }  // namespace Callbacks

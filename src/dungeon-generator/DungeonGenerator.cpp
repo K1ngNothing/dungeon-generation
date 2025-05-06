@@ -82,6 +82,17 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
     solver.solve();
     Model::Positions solution = solver.retrieveSolution();
     model.setPositions(solution);
+    model.dumpToSVG(kPathToSVG / "result_run_0.svg");
+
+    // Rerun the solver. Reuse inner state.
+    for (size_t runId = 1; runId <= kSolverRerunCount; ++runId) {
+        solver.rerunSolver();
+        solution = solver.retrieveSolution();
+        model.setPositions(solution);
+
+        const std::string fileName = "result_run_" + std::to_string(runId);
+        model.dumpToSVG(kPathToSVG / (fileName + ".svg"));
+    }
 
     return std::move(model);
 }

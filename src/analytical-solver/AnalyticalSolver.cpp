@@ -57,6 +57,8 @@ AnalyticalSolver::~AnalyticalSolver()
 
 void AnalyticalSolver::solve()
 {
+    // TODO: do I really want to throw exceptions? Maybe just return bool or some kind of error code?
+
     std::cerr << "AnalyticalSolver: start solving...\n";
     const auto beginTimestamp = std::chrono::steady_clock::now();
 
@@ -73,6 +75,28 @@ void AnalyticalSolver::solve()
     const double solvingDuration = std::chrono::duration<double>(endTimestamp - beginTimestamp).count();
     std::cerr << "AnalyticalSolver: finished solving in " << solvingDuration << " seconds!\n"
               << "Converged reason: " << TaoConvergedReasons[convergedReason] << "\n";
+}
+
+bool AnalyticalSolver::rerunSolver()
+{
+    if (prepareSolverRerun() != PETSC_SUCCESS) {
+        std::cerr << "(!) AnalyticalSolver::rerunSolver(): rerun preparation failed :(\n";
+        return false;
+    }
+
+    // Try to run solver
+    try {
+        runId_++;
+        std::cerr << "\n----- Rerun " << runId_ << " -----\n";
+        solve();
+        return true;
+    } catch (std::exception& error) {
+        std::cout << "(!) AnalyticalSolver::rerunSolver: solver rerun failed: " << error.what() << "\n";
+        return false;
+    } catch (...) {
+        assert(false && "One must throw a proper exception");
+        return false;
+    }
 }
 
 Model::Positions AnalyticalSolver::retrieveSolution() const
@@ -230,6 +254,28 @@ void AnalyticalSolver::destroyTAOObjects()
     if (JEq_) static_cast<void>(MatDestroy(&JEq_));
 }
 
+PetscErrorCode AnalyticalSolver::prepareSolverRerun()
+{
+    PetscFunctionBegin;
+
+    // Nerf Lagrangian multipliers
+    int multipliersCnt;
+    Vec multipliersVec;
+    double* multipliersArr;
+    PetscCall(TaoALMMGetMultipliers(almmSolver_, &multipliersVec));
+    PetscCall(VecGetSize(multipliersVec, &multipliersCnt));
+    PetscCall(VecGetArray(multipliersVec, &multipliersArr));
+    for (int i = 0; i < multipliersCnt; ++i) {
+        multipliersArr[i] /= 1000;
+    }
+    PetscCall(VecRestoreArray(multipliersVec, &multipliersArr));
+
+    // Make sure that ALMM will reuse existing solution and multipliers
+    PetscCall(TaoSetRecycleHistory(almmSolver_, PETSC_TRUE));
+
+    PetscFunctionReturn(PETSC_SUCCESS);
+}
+
 PetscErrorCode AnalyticalSolver::runCallbacks(int iterNum)
 {
     PetscFunctionBegin;
@@ -240,7 +286,7 @@ PetscErrorCode AnalyticalSolver::runCallbacks(int iterNum)
         callback(xArr);
     }
     for (const Callbacks::ReaderCallback& callback : readerCallbacks_) {
-        callback(xArr, iterNum);
+        callback(xArr, runId_, iterNum);
     }
     PetscCall(VecRestoreArray(x_, &xArr));
 

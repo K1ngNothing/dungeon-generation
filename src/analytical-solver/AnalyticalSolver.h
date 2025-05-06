@@ -24,6 +24,9 @@ public:
 
     void solve();
 
+    /// Try to improve solution by rerunning ALMM solver
+    bool rerunSolver();
+
     Model::Positions retrieveSolution() const;
 
 private:
@@ -33,6 +36,9 @@ private:
     PetscErrorCode setContainersAndRoutines();
     PetscErrorCode setScaryOptionsInTAOSolvers();
     void destroyTAOObjects();
+
+    /// Implementation of rerunSolver routine. It's needed to properly call PETSc functions
+    PetscErrorCode prepareSolverRerun();
 
     /// Run callbacks (e.g. SVG dump) after each ALMM iteration.
     PetscErrorCode runCallbacks(int iterNum);
@@ -53,6 +59,9 @@ private:
     std::vector<Callbacks::FGEval> equalityConstraints_;
     std::vector<Callbacks::ModifierCallback> modifierCallbacks_;
     std::vector<Callbacks::ReaderCallback> readerCallbacks_;
+
+    // Run info
+    size_t runId_ = 0;
 
     // TAO solvers
     Tao almmSolver_ = nullptr;

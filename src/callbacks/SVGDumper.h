@@ -10,7 +10,7 @@ namespace Callbacks {
 class SVGDumper {
 public:
     SVGDumper(Model::Model& model, const std::filesystem::path& pathToSVG, const std::string& filenamePrefix);
-    void operator()(const double* x, int iterNum);
+    void operator()(const double* x, int runNum, int iterNum);
 
 private:
     Model::Model& model_;

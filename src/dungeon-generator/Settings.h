@@ -9,7 +9,7 @@ namespace DungeonGeneration {
 
 // Model generation settings
 constexpr DungeonType kDungeonType = DungeonType::MovableDoors;
-constexpr size_t kRoomCount = 100;
+constexpr size_t kRoomCount = 50;
 static constexpr size_t kAdditionalEdges = kRoomCount * 0.1;  /// Edge count to add to the tree
 const std::vector<RoomType> kRegularRoomTypes = {
     {{20, 20},    1},
@@ -18,6 +18,9 @@ const std::vector<RoomType> kRegularRoomTypes = {
     {{40, 20},  0.3},
     {{40, 40}, 0.25}
 };
+
+// Solver rerun
+constexpr size_t kSolverRerunCount = 0;
 
 // Hub
 static constexpr bool kEnableHubRoom = true;
