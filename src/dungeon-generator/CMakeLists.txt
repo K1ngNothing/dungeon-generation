@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.23)
 project(dungeon_generator)
 add_library(${PROJECT_NAME} STATIC
     DungeonGenerator.cpp
+    GraphGenerator.cpp
+    ModelGenerator.cpp
 )
 
 target_sources(${PROJECT_NAME} PUBLIC
@@ -16,7 +18,10 @@ target_sources(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        model_generator
+        analytical_solver
+        callbacks
+        model
+        utils
 )
 
 target_compile_options(${PROJECT_NAME}

@@ -20,7 +20,7 @@ private:
     RoomPairs findDisconnectedRooms(const Model::Model& model) const;
     void calculatePush(RoomPair rooms, const double* x, double& f, double* grad) const;
 
-    static constexpr bool kPushOnlyDisconnected = true;
+    static constexpr bool kPushOnlyDisconnected = true;  // TODO: maybe should be moved to Settings.h
 
     const Model::Model& model_;
     const double scale_ = 1.0;  // the maximum value of the function

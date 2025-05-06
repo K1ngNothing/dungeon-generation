@@ -4,7 +4,6 @@ add_subdirectory(analytical-solver)
 add_subdirectory(callbacks)
 add_subdirectory(dungeon-generator)
 add_subdirectory(model)
-add_subdirectory(model-generator)
 add_subdirectory(utils)
 
 project(run_dungeon_generator)
@@ -16,6 +15,11 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         dungeon_generator
         utils
+)
+
+target_compile_options(${PROJECT_NAME}
+    PRIVATE
+        -DPATH_TO_SVG="${CMAKE_BINARY_DIR}"
 )
 
 include(FetchContent)

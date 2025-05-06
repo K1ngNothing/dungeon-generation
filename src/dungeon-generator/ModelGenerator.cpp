@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#include "GraphGenerator.h"
+#include "Settings.h"
+
 namespace DungeonGeneration {
 
 namespace {
@@ -29,42 +32,6 @@ Model::Room createRoomFourFixedDoors(
     };
 
     return Room(roomId, width, height, std::move(doors), centerPosition);
-}
-
-bool isTree(const ModelGenerator::Graph& graph)
-{
-    const size_t n = graph.size();
-    if (n == 0) {
-        return true;
-    }
-
-    // Check edge count
-    size_t edgeCount = 0;
-    for (size_t v = 0; v < n; ++v) {
-        edgeCount += graph[v].size();
-    }
-    edgeCount /= 2;  // Each edge is counted twice
-    if (edgeCount != n - 1) {
-        return false;
-    }
-
-    // Check connectivity
-    std::vector<bool> visited(n);
-    std::function<void(size_t)> dfs = [&graph, &visited, &dfs](size_t v) {
-        visited[v] = true;
-        for (const size_t u : graph[v]) {
-            if (!visited[u]) {
-                dfs(u);
-            }
-        }
-    };
-    dfs(0);
-    for (size_t v = 0; v < n; ++v) {
-        if (!visited[v]) {
-            return false;
-        }
-    }
-    return true;
 }
 
 }  // namespace
@@ -128,8 +95,8 @@ Model::Model ModelGenerator::generateGrid(size_t gridSide) const
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-/// Generates a dungeon with random tree structure with doors in the center of the rooms.
-Model::Model ModelGenerator::generateTreeCenterDoors(size_t roomCount)
+/// Generates a dungeon with doors in the center of the rooms.
+Model::Model ModelGenerator::generateModelCenterDoors(size_t roomCount)
 {
     assert(roomCount > 0);
 
@@ -141,12 +108,17 @@ Model::Model ModelGenerator::generateTreeCenterDoors(size_t roomCount)
         rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, std::move(doors));
     }
 
-    // 2. Add corridors
+    // 2. Generate graph
+    GraphGenerator graphGenerator;
+    GraphGenerator::Graph graph = graphGenerator.generateConnectedGraph(roomCount, kAdditionalEdges);
+
+    // 3. Add corridors
     std::vector<Model::Corridor> corridors;
     corridors.reserve(roomCount - 1);
-    for (size_t roomId = 1; roomId < roomCount; ++roomId) {
-        size_t otherRoom = rng_() % roomId;
-        corridors.push_back({rooms[roomId].doorsMutable()[0], rooms[otherRoom].doorsMutable()[0]});
+    for (size_t v = 0; v < roomCount; ++v) {
+        for (const size_t u : graph[v]) {
+            corridors.push_back({rooms[v].doorsMutable()[0], rooms[u].doorsMutable()[0]});
+        }
     }
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
@@ -195,8 +167,8 @@ Model::Model ModelGenerator::generateTreeFixedDoors(size_t roomCount)
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-/// Generates a dungeon with random tree structure with movable doors. Each edge just adds a pair of movable doors.
-Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
+/// Generates a dungeon with movable doors. Each edge just adds a pair of movable doors.
+Model::Model ModelGenerator::generateModelMovableDoors(size_t roomCount)
 {
     assert(roomCount > 0);
 
@@ -207,8 +179,9 @@ Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
         rooms[roomId] = Model::Room(roomId, roomWidth, roomHeight, {});
     }
 
-    // 2. Decide what rooms will be connected
-    std::vector<std::vector<size_t>> graph = generateTree(roomCount);
+    // 2. Generate graph
+    GraphGenerator graphGenerator;
+    GraphGenerator::Graph graph = graphGenerator.generateConnectedGraph(roomCount, kAdditionalEdges);
 
     //  3. Add corridors: for each corridor we create a pair of movable rooms
     // (!) We must be very careful with door references in Corridors
@@ -222,7 +195,7 @@ Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
     corridors.reserve(roomCount - 1);
     for (size_t room1 = 0; room1 < roomCount; ++room1) {
         for (size_t room2 : graph[room1]) {
-            assert(room1 != room2 && "Loop in the tree");
+            assert(room1 != room2 && "Loop in the graph");
             if (room1 >= room2) {
                 continue;
             }
@@ -236,71 +209,7 @@ Model::Model ModelGenerator::generateTreeMovableDoors(size_t roomCount)
     return Model::Model{std::move(rooms), std::move(corridors)};
 }
 
-ModelGenerator::Graph ModelGenerator::generateTree(size_t vertexCount)
-{
-    switch (kTreeGenerationStrategy) {
-        case TreeGenerationStrategy::RandomPredecessors:
-            return generateTreePredecessorStrategy(vertexCount);
-        case TreeGenerationStrategy::RandomChildCount:
-            return generateTreeChildCountStrategy(vertexCount);
-        default:
-            assert(false && "Unknown tree generation strategy");
-            return Graph();
-    }
-}
-
-ModelGenerator::Graph ModelGenerator::generateTreePredecessorStrategy(size_t vertexCount)
-{
-    std::vector<std::vector<size_t>> graph(vertexCount);
-    for (size_t v = 1; v < vertexCount; ++v) {
-        const size_t u = Random::uniformDiscrete(v - 1, rng_);
-        graph[v].push_back(u);
-        graph[u].push_back(v);
-    }
-    assert(isTree(graph) && "Resulting graph isn't a tree :(");
-    return graph;
-}
-
-ModelGenerator::Graph ModelGenerator::generateTreeChildCountStrategy(size_t vertexCount)
-{
-    constexpr size_t maxNeighborsCount = 4;
-
-    std::vector<std::vector<size_t>> graph(vertexCount);
-    if (vertexCount == 1) {
-        // Just to be safe
-        return graph;
-    }
-
-    size_t disconnectedVertex = 1;
-    for (size_t v = 0; v < vertexCount; ++v) {
-        assert(disconnectedVertex > v && "Current vertex isn't connected to the graph");
-        assert(disconnectedVertex <= vertexCount && "disconnectedVertex is too big");
-
-        size_t maxChildrenCount = maxNeighborsCount - 1;
-        if (v == 0) {
-            maxChildrenCount = (kEnableHubRoom ? kHubNeighborsCount : maxNeighborsCount);
-        }
-        maxChildrenCount = std::min(maxChildrenCount, vertexCount - disconnectedVertex);
-        assert(disconnectedVertex + maxChildrenCount <= vertexCount && "Too many children nodes");
-
-        // Room 0 always has the maximum allowed room count
-        size_t childrenCount = (v == 0 ? maxChildrenCount : Random::uniformDiscrete(maxChildrenCount, rng_));
-        if (childrenCount == 0 && v + 1 != vertexCount && disconnectedVertex == v + 1) {
-            // The next vertex won't be connected => the whole graph will be disconnected
-            childrenCount = 1;
-        }
-        for (size_t childNum = 0; childNum < childrenCount; ++childNum) {
-            assert(disconnectedVertex < vertexCount && "Invalid graph edge");
-            graph[v].push_back(disconnectedVertex);
-            graph[disconnectedVertex].push_back(v);
-            disconnectedVertex++;
-        }
-    }
-    assert(isTree(graph) && "Resulting graph isn't a tree :(");
-    return graph;
-}
-
-ModelGenerator::RoomDimensions ModelGenerator::generateRoom(size_t roomId)
+RoomDimensions ModelGenerator::generateRoom(size_t roomId)
 {
     if (kUniformRooms) {
         return kRegularRoomTypes[0].dimensions;
@@ -311,9 +220,9 @@ ModelGenerator::RoomDimensions ModelGenerator::generateRoom(size_t roomId)
     return generateRoomFromDistribution(kRegularRoomTypes);
 }
 
-ModelGenerator::RoomDimensions ModelGenerator::generateRoomFromDistribution(const std::vector<RoomType>& roomTypes)
+RoomDimensions ModelGenerator::generateRoomFromDistribution(const std::vector<RoomType>& roomTypes)
 {
-    // TODO: be careful about constant weights copying. For now it's fine because we don't have a lot of room types.
+    // TODO: be careful about weights copying. For now it's fine because we don't have a lot of room types.
     const size_t n = roomTypes.size();
     std::vector<double> weights(n);
     for (size_t i = 0; i < n; ++i) {

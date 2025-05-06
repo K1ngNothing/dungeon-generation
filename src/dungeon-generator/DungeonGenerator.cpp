@@ -9,7 +9,10 @@
 #include <callbacks/RoomShaker.h>
 #include <callbacks/SVGDumper.h>
 
-std::filesystem::path kPathToSVG
+#include "ModelGenerator.h"
+#include "Settings.h"
+
+static std::filesystem::path kPathToSVG
 {
 #if defined(PATH_TO_SVG)
     PATH_TO_SVG
@@ -22,7 +25,6 @@ Model::Model DungeonGenerator::generateDungeon() const
 {
     Model::Model model = generateModel();
     model = runSolver(std::move(model));
-    model.dumpToSVG(kPathToSVG / "result.svg");
     return model;
 }
 
@@ -31,16 +33,18 @@ Model::Model DungeonGenerator::generateModel() const
     ModelGenerator modelGenerator;
     switch (kDungeonType) {
         case DungeonType::Grid: {
+            // More of a test run
+            constexpr size_t kGridSide = 5;
             Model::Model model = modelGenerator.generateGrid(kGridSide);
             model.dumpToSVG(kPathToSVG / "grid_input.svg");
             return model;
         }
-        case DungeonType::TreeCenterDoors:
-            return modelGenerator.generateTreeCenterDoors(kRoomCount);
+        case DungeonType::CenterDoors:
+            return modelGenerator.generateModelCenterDoors(kRoomCount);
         case DungeonType::TreeFixedDoors:
             return modelGenerator.generateTreeFixedDoors(kRoomCount);
-        case DungeonType::TreeMovableDoors:
-            return modelGenerator.generateTreeMovableDoors(kRoomCount);
+        case DungeonType::MovableDoors:
+            return modelGenerator.generateModelMovableDoors(kRoomCount);
         default:
             assert(false && "Unsupported DungeonType");
             return Model::Model();
@@ -55,9 +59,7 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
         costFunctions.push_back(Callbacks::CorridorLength(door1, door2));
     }
     if (kEnablePushForce) {
-        constexpr double scale = 10.0;
-        constexpr double range = 5.0;
-        costFunctions.push_back(Callbacks::PushForce(model, scale, range));
+        costFunctions.push_back(Callbacks::PushForce(model, kPushForceScale, kPushForceRange));
     }
 
     // Penalty functions
@@ -65,7 +67,7 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
     const Model::Rooms& rooms = model.rooms();
     for (size_t i = 0; i < rooms.size(); ++i) {
         for (size_t j = i + 1; j < rooms.size(); ++j) {
-            penaltyFunctions.push_back(Callbacks::RoomOverlap(rooms[i], rooms[j]));
+            penaltyFunctions.push_back(Callbacks::RoomOverlap(rooms[i], rooms[j], kRoomBloating));
         }
     }
 
