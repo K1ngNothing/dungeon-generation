@@ -74,20 +74,13 @@ PetscErrorCode evaluateEqualityConstraintsFunction(Tao almmSolver, Vec xVec, Vec
     }
 #endif
 
-    // Calculate both constraints values and Jacobian
-    std::vector<double> JEqArr(cEqCnt * varCnt);
-    for (size_t fcnId = 0; fcnId < cEqCnt; ++fcnId) {
-        double* cEqGradArr = &JEqArr[fcnId * varCnt];  // This is where relevant JEq row starts
-        solver->equalityConstraints_[fcnId](xArr, cEqArr[fcnId], cEqGradArr);
+    // Calculate both constraints values and Jacobian (latter is written directly into JEq matrix)
+    Mat JEq = solver->JEq_;
+    PetscCall(MatZeroEntries(JEq));
+    for (size_t cEqId = 0; cEqId < cEqCnt; ++cEqId) {
+        solver->equalityConstraints_[cEqId](xArr, cEqArr[cEqId], JEq, cEqId);
     }
 
-    // Set Jacobian values
-    Mat JEq = solver->JEq_;
-    const PetscInt* rowIndexes = solver->JEqRowIndexes_.data();
-    const PetscInt* colIndexes = solver->JEqColIndexes_.data();
-    assert(rowIndexes && "Null row indicies");
-    assert(colIndexes && "Null col indicies");
-    PetscCall(MatSetValues(JEq, cEqCnt, rowIndexes, varCnt, colIndexes, JEqArr.data(), INSERT_VALUES));
     PetscCall(MatAssemblyBegin(JEq, MAT_FINAL_ASSEMBLY));
     PetscCall(MatAssemblyEnd(JEq, MAT_FINAL_ASSEMBLY));
 

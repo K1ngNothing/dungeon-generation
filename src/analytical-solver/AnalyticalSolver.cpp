@@ -12,7 +12,7 @@ namespace AnalyticalSolver {
 
 AnalyticalSolver::AnalyticalSolver(
     size_t objectCnt, size_t varCnt, Model::VariablesBounds&& variablesBounds,
-    std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::FGEval>&& equalityConstraints,
+    std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::CEqFGEval>&& equalityConstraints,
     std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
     std::vector<Callbacks::ReaderCallback>&& readerCallbacks)
       : objectCnt_(objectCnt),

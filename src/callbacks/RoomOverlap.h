@@ -10,7 +10,7 @@ class RoomOverlap {
 
 public:
     RoomOverlap(const Model::Room& room1, const Model::Room& room2, const double roomBloating = kNoBloating);
-    void operator()(const double* x, double& f, double* grad) const;
+    void operator()(const double* x, double& f, void* JEqPtr, int cEqId) const;
 
 private:
     const double roomBloating_ = kNoBloating;

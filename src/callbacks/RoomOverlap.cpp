@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdlib>
 
+#include <petsc.h>
+
 namespace DungeonGeneration {
 namespace Callbacks {
 
@@ -14,8 +16,10 @@ RoomOverlap::RoomOverlap(const Model::Room& room1, const Model::Room& room2, dou
     assert(room1.id() != room2.id() && "Don't create overlap function for one room");
 }
 
-void RoomOverlap::operator()(const double* x, double& f, double* grad) const
+void RoomOverlap::operator()(const double* x, double& f, void* JEqPtr, int cEqId) const
 {
+    Mat JEq = reinterpret_cast<Mat>(JEqPtr);
+
     const auto [x1, y1] = room1_.getVariablesVal(x);
     const auto [x2, y2] = room2_.getVariablesVal(x);
     const auto [x1Id, y1Id] = room1_.getVariablesIds();
@@ -53,13 +57,18 @@ void RoomOverlap::operator()(const double* x, double& f, double* grad) const
     f += fVal;
     assert(fVal <= 1 && "Room overlap should be in range [0, 1]");
 
-    if (grad != nullptr) {
+    if (JEqPtr != nullptr) {
         const double gradX1 = 4 * fySquared * fx * dx / (sumHalfWidth * sumHalfWidth);
         const double gradY1 = 4 * fxSquared * fy * dy / (sumHalfHeight * sumHalfHeight);
-        grad[x1Id] += gradX1;
-        grad[y1Id] += gradY1;
-        grad[x2Id] -= gradX1;
-        grad[y2Id] -= gradY1;
+
+        const std::vector<PetscInt> rowIndexes{cEqId};
+        const std::vector<PetscInt> colIndexes{
+            static_cast<PetscInt>(x1Id), static_cast<PetscInt>(y1Id), static_cast<PetscInt>(x2Id),
+            static_cast<PetscInt>(y2Id)};
+        const std::vector<PetscScalar> values{gradX1, gradY1, -gradX1, -gradY1};
+        bool JEqUpdated =
+            MatSetValues(JEq, 1, rowIndexes.data(), 4, colIndexes.data(), values.data(), ADD_VALUES) == PETSC_SUCCESS;
+        assert(JEqUpdated && "RoomOverlap::operator(): failed to update JEq values");
     }
 }
 

@@ -16,7 +16,7 @@ class AnalyticalSolver {
 public:
     AnalyticalSolver(
         size_t objectCnt, size_t varCnt, Model::VariablesBounds&& variablesBounds,
-        std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::FGEval>&& equalityConstraints,
+        std::vector<Callbacks::FGEval>&& costFunctions, std::vector<Callbacks::CEqFGEval>&& equalityConstraints,
         std::vector<Callbacks::ModifierCallback>&& modifierCallbacks,
         std::vector<Callbacks::ReaderCallback>&& readerCallbacks);
 
@@ -56,7 +56,7 @@ private:
     size_t cEqCnt_;
     Model::VariablesBounds variablesBounds_;
     std::vector<Callbacks::FGEval> costFunctions_;
-    std::vector<Callbacks::FGEval> equalityConstraints_;
+    std::vector<Callbacks::CEqFGEval> equalityConstraints_;
     std::vector<Callbacks::ModifierCallback> modifierCallbacks_;
     std::vector<Callbacks::ReaderCallback> readerCallbacks_;
 

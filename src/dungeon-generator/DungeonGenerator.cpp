@@ -63,7 +63,7 @@ Model::Model DungeonGenerator::runSolver(Model::Model&& model) const
     }
 
     // Penalty functions
-    std::vector<Callbacks::FGEval> penaltyFunctions;
+    std::vector<Callbacks::CEqFGEval> penaltyFunctions;
     const Model::Rooms& rooms = model.rooms();
     for (size_t i = 0; i < rooms.size(); ++i) {
         for (size_t j = i + 1; j < rooms.size(); ++j) {

@@ -22,6 +22,7 @@ target_sources(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
+        petsc_lib
         model
         utils
 )
