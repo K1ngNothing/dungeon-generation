@@ -169,8 +169,8 @@ PetscErrorCode AnalyticalSolver::initializeTAOContainers()
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, varCnt_, &costGradient_));
     PetscCall(VecCreateSeq(PETSC_COMM_SELF, cEqCnt_, &cEq_));
     // TODO: should this matrix be dense?
-    PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, cEqCnt_, varCnt_, nullptr, &JEq_));
-    // PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, cEqCnt_, varCnt_, varCnt_, nullptr, &JEq_));
+    // PetscCall(MatCreateSeqDense(PETSC_COMM_SELF, cEqCnt_, varCnt_, nullptr, &JEq_));
+    PetscCall(MatCreateSeqAIJ(PETSC_COMM_SELF, cEqCnt_, varCnt_, varCnt_, nullptr, &JEq_));
 
     // Set initial solution to zero. The exact value doesn't matter, because at the first iteration constraints will
     // be disabled, and therefore solver will find the solution where most of the corridors are exactly zero.

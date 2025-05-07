@@ -9,7 +9,7 @@ namespace DungeonGeneration {
 
 // Model generation settings
 constexpr DungeonType kDungeonType = DungeonType::MovableDoors;
-constexpr size_t kRoomCount = 50;
+constexpr size_t kRoomCount = 100;
 static constexpr size_t kAdditionalEdges = kRoomCount * 0.1;  /// Edge count to add to the tree
 const std::vector<RoomType> kRegularRoomTypes = {
     {{20, 20},    1},
@@ -27,7 +27,7 @@ static constexpr bool kEnableHubRoom = true;
 const std::vector<RoomType> kHubRoomTypes{
     {{60, 60}, 1}
 };
-static constexpr size_t kHubNeighborsCount = kRoomCount * 0.1;
+static constexpr size_t kHubNeighborsCount = std::min<size_t>(10, kRoomCount * 0.1);
 
 // Callback settings
 constexpr bool kEnablePushForce = true;

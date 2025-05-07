@@ -103,6 +103,8 @@ GraphGenerator::Graph GraphGenerator::generateTreePredecessorStrategy(size_t ver
 
 GraphGenerator::Graph GraphGenerator::generateTreeChildCountStrategy(size_t vertexCount)
 {
+    // TODO: move this setting out to Settings.h
+    //       implement neighbors count distribution
     constexpr size_t maxNeighborsCount = 4;
 
     std::vector<std::vector<size_t>> graph(vertexCount);
