@@ -1,0 +1,24 @@
+BasedOnStyle: Google
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 120
+AllowShortFunctionsOnASingleLine: None
+SortIncludes: CaseInsensitive
+InsertNewlineAtEOF: true
+AlignArrayOfStructures: Right
+AlignAfterOpenBracket: AlwaysBreak
+IncludeBlocks: Preserve
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  SplitEmptyFunction: false
+  BeforeCatch: false
+  AfterEnum: false
+  AfterClass: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterNamespace: false
+  BeforeElse: false
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 6
+AllowShortLambdasOnASingleLine: Inline

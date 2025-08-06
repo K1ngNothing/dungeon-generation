@@ -1,0 +1,3 @@
+[submodule "dungeon-generation-results"]
+	path = dungeon-generation-results
+	url = https://github.com/K1ngNothing/dungeon-generation-results
