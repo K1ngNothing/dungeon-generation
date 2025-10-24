@@ -1,19 +1,14 @@
-## Issues:
-- [ ] `generateTree` generates layout that can't be placed on 2D plane. Example:
-<p align="center">
-<img src="images/tree_25_problem.png" alt="drawing" width="400"/>
-</p>
-Solution: limit adjacent vertices count to 3-4? Or maybe it won't be a problem with proper doors, because we won't have multiple corridors connected to the same door.
+# Global Tasks:
+- [ ] Algorithm for fixing solution imperfections.
+  - [ ] Splitting corridor in half if it going through the room 
+  - [ ] Routing (much harder)
+- [ ] Implement proper multi-threading.
+  - [ ] Bigget roadblock: it seems that PETSc TAO only utilizes MPI parallelization, which I'm not familiar with. My code isn't a bottleneck yet.  
 
-- [ ] Unstable results, even though I've seeded every random event (or maybe they are stable? Because I've got the same result for tree layout with 100 vertices as yesterday).
+# Smaller Tasks:
+- [ ] Add coordinates normalization? Because for now contraints are bounded, but target function is not.
 
-## TODO:
-- [x] Create a generator with proper doors. For now it's fine to have a tree graph structure.
-- [x] Add unit-tests. Especially I must test correctness of my functions and their gradients.
-- [x] Implement anti-density function that pushes disconnected rooms away from each other. Maybe this will lower count of "bad corridors"?
-  * Notes on that: for now the function is $$\frac{scale}{2 \cdot \frac{x_1 - x_2}{range \cdot (w_1 + w_2)} + 2 \cdot \frac{y_1 - y_2}{range \cdot (h_1 + h_2)} + 1}$$ Point is that this function lies in range $[0; scale]$ and $range$ is responsible for the point where function reaches half of it's value (e.g. with $range = 1$ value of the first fraction reaches $0.5$ when rooms are touching on the $x$ axis).
-  * Ideally we need a coordinate normalization, because this function is bounded, but corridor length isn't
-- [ ] Test movable doors. This might allow us to no longer worry about a feasibility of the solution, and allow us to just set a desired graph.
-- [ ] Add coordinates normalization? Don't really now is it relevant in this task or not, but maybe worth implementing and testing.
-- [ ] Algorithm for fixing solution imperfections? Maybe remove some edges and add new ones?
-
+# What to research:
+- PETSc parallelization tutorial: [link](https://petsc.org/release/manual/getting_started/#parallel-and-gpu-programming)
+- Books or tutorials for MPI? Maybe useful outside this project.
+- Guides on writing code for GPU (for example, this course about algorithms on GPU: [lectures](https://www.youtube.com/playlist?list=PLlb7e2G7aSpSptbl_yI5uvMlpRc1mwsCL), [repo](https://github.com/DanielGabitov/GPGPUTasks2022)) 
